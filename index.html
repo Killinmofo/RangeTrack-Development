@@ -511,17 +511,41 @@ function overallSummary(p){
 function setAreaScore(id,attempt,tableId,areaId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const dest=attempt==='initial'?p.initialScores:p.refireScores;if(!dest[tableId])dest[tableId]={};dest[tableId][areaId]=value===''?'':n(value);save();if(db.view==='score')refreshScoringTable();else refreshLive()}
 function setTimeResult(id,attempt,tableId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const key=attempt==='initial'?'initialTimes':'refireTimes';if(!p[key])p[key]={};p[key][tableId]=value;save();refreshLive()}
 
-const makeShooter=(name,lane,rounds,buttNumber="")=>({buttNumber,id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false});
-const makeSession=()=>({date:new Date().toLocaleDateString('en-CA'),defaultRounds:0,selected:'',shooters:[],view:'roster'});
+const makeShooter=(name,lane,rounds,buttNumber="")=>({buttNumber,grade:'',dodId:'',organization:'',weaponSerial:'',id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false});
+const makeSession=()=>({date:new Date().toLocaleDateString('en-CA'),authenticatingOfficial:'',defaultRounds:0,selected:'',shooters:[],view:'roster'});
 const isCustom=c=>c==='Sustainment';
 function phaseNames(){return current()?.template?.phases?.map(p=>p.id)||phases().map(p=>p.id)};
 function phaseTitle(id){return (current()?.template?.phases||phases()).find(p=>p.id===id)?.name||id};
-function openCourse(){if(!db.weapon||!selectedCourse())return;const key=sessionKey();if(!db.sessions[key]){db.sessions[key]=makeSession();db.sessions[key].template=JSON.parse(JSON.stringify(selectedCourse()));db.sessions[key].defaultRounds=selectedCourse().defaultRounds||0}db.view='roster';save();render()}
+function openCourse(){
+ if(!db.weapon||!selectedCourse())return;
+ const key=sessionKey();
+ if(!db.sessions[key]){
+  const official=document.getElementById('newAuthenticatingOfficial')?.value.trim()||'';
+  if(!official){alert('Enter the authenticating official before starting the class.');return;}
+  db.sessions[key]=makeSession();
+  db.sessions[key].authenticatingOfficial=official;
+  db.sessions[key].template=JSON.parse(JSON.stringify(selectedCourse()));
+  db.sessions[key].defaultRounds=selectedCourse().defaultRounds||0;
+ }
+ db.view='roster';save();render();
+}
 function home(){db.view='home';dashboardSection='';save();render()}
 function tab(v){db.view=v;save();render()}
 function chooseWeapon(w){dashboardSection='course';db.weapon=w;db.course='';save();render()}
 function chooseCourse(c){db.course=c;save();render()}
-function addShooter(){const s=current(),name=document.getElementById('newName').value.trim(),lane=document.getElementById('newLane').value,buttNumber=document.getElementById('newButtNumber').value.trim();if(!name)return alert('Enter a shooter name.');const p=makeShooter(name,lane===''?'':n(lane),n(s.defaultRounds),buttNumber);s.shooters.push(p);s.selected=p.id;save();render()}
+function addShooter(){
+ const session=current(),name=document.getElementById('newName').value.trim();
+ const lane=document.getElementById('newLane').value;
+ const buttNumber=document.getElementById('newButtNumber')?.value.trim()||'';
+ const grade=document.getElementById('newGrade').value.trim();
+ const dodId=document.getElementById('newDodId').value.trim();
+ const organization=document.getElementById('newOrganization').value.trim();
+ const weaponSerial=document.getElementById('newWeaponSerial').value.trim();
+ if(!name||!grade||!organization){alert('Name, grade and organization are required. DoD ID and serial number are optional.');return;}
+ const p=makeShooter(name,lane===''?'':n(lane),n(session.defaultRounds),buttNumber);
+ Object.assign(p,{grade,dodId,organization,weaponSerial});
+ session.shooters.push(p);session.selected=p.id;save();render();
+}
 function removeShooter(id){if(!confirm('Remove this shooter and their scores?'))return;const s=current();s.shooters=s.shooters.filter(p=>p.id!==id);if(s.selected===id)s.selected=s.shooters[0]?.id||'';save();render()}
 function editShooter(id,k,v){const p=current().shooters.find(x=>x.id===id);if(!p)return;p[k]=['initial','extra','lane'].includes(k)?n(v):v;save();if(k==='lane'||k==='name'||k==='buttNumber')render();else refreshLive()}
 function updateSession(k,v){current()[k]=k==='defaultRounds'?n(v):v;save()}
@@ -537,7 +561,7 @@ function progress(p){return tableList().filter(t=>{
 }).length}
 function total(p){return (Number(p.initial)||0)+(Number(p.extra)||0)}
 function clearAll(){const s=current();if(!s)return;const ok=confirm('CLEAR ALL for '+db.weapon+' '+db.course+'?\n\nThis permanently deletes all shooters, lanes, scores, refires and ammunition for this course. Other courses will not be affected.');if(!ok)return;const sure=prompt('Type CLEAR to confirm:');if(sure!=='CLEAR')return;db.sessions[sid(db.weapon,db.course)]=makeSession();db.sessions[sid(db.weapon,db.course)].template=JSON.parse(JSON.stringify(selectedCourse()));db.sessions[sid(db.weapon,db.course)].defaultRounds=selectedCourse()?.defaultRounds||0;db.view='roster';save();render()}
-function dashboard(){return `<h2 class="dashboard-title">Dashboard</h2><section class="dashboard-section"><button class="dashboard-card" onclick="toggleDashboardSection('weapon')"><span class="dash-icon">◎</span><span class="dash-copy"><strong>Select Weapon System</strong><small>${db.weapon?'Selected: '+safe(db.weapon):'Choose M18, M4A1, or another weapon.'}</small></span><span class="dash-chevron">›</span></button>${dashboardSection==='weapon'?`<div class="panel"><h2>Choose weapon system</h2><div class="weapons">${WEAPONS.map((w,i)=>`<button class="${db.weapon===w?'selected active':''}" onclick="chooseWeapon(WEAPONS[${i}])">${safe(w)}</button>`).join('')}</div></div>`:''}<button class="dashboard-card" onclick="toggleDashboardSection('course')"><span class="dash-icon">⊕</span><span class="dash-copy"><strong>Select Course</strong><small>${selectedCourse()?'Selected: '+safe(selectedCourse().name):'Choose and start a qualification course.'}</small></span><span class="dash-chevron">›</span></button>${dashboardSection==='course'?`<div class="panel"><h2>${db.weapon?safe(db.weapon)+' courses':'Select a weapon first'}</h2>${db.weapon?`<div class="courses">${availableCourses(db.weapon).map(c=>`<button class="${db.course===c.id?'selected active':''}" onclick="chooseCourse('${c.id}')">${safe(c.name)}</button>`).join('')||'<p class="muted">No courses assigned. Use Course Editor to assign one.</p>'}</div>${selectedCourse()?`<div class="dashboard-selection"><p class="muted">${safe(selectedCourse().notes)}</p><button class="primary dashboard-action" onclick="openCourse()">${db.sessions[sessionKey()]?'Continue':'Start'} ${safe(selectedCourse().name)} →</button></div>`:''}`:'<p class="muted">Select a weapon system above to see its courses.</p>'}</div>`:''}<button class="dashboard-card" onclick="tab('active')"><span class="dash-icon">♟</span><span class="dash-copy"><strong>Active Courses</strong><small>Open, manage, or delete saved classes (${Object.keys(db.sessions).length}).</small></span><span class="dash-chevron">›</span></button><button class="dashboard-card" onclick="tab('editor')"><span class="dash-icon">⚙</span><span class="dash-copy"><strong>Course Editor</strong><small>Create and manage reusable course templates.</small></span><span class="dash-chevron">›</span></button><button class="dashboard-card" onclick="tab('weapons')"><span class="dash-icon">✎</span><span class="dash-copy"><strong>Manage Weapon Systems</strong><small>Add or remove weapons available at this location.</small></span><span class="dash-chevron">›</span></button></section>`}
+function dashboard(){return `<h2 class="dashboard-title">Dashboard</h2><section class="dashboard-section"><button class="dashboard-card" onclick="toggleDashboardSection('weapon')"><span class="dash-icon">◎</span><span class="dash-copy"><strong>Select Weapon System</strong><small>${db.weapon?'Selected: '+safe(db.weapon):'Choose M18, M4A1, or another weapon.'}</small></span><span class="dash-chevron">›</span></button>${dashboardSection==='weapon'?`<div class="panel"><h2>Choose weapon system</h2><div class="weapons">${WEAPONS.map((w,i)=>`<button class="${db.weapon===w?'selected active':''}" onclick="chooseWeapon(WEAPONS[${i}])">${safe(w)}</button>`).join('')}</div></div>`:''}<button class="dashboard-card" onclick="toggleDashboardSection('course')"><span class="dash-icon">⊕</span><span class="dash-copy"><strong>Select Course</strong><small>${selectedCourse()?'Selected: '+safe(selectedCourse().name):'Choose and start a qualification course.'}</small></span><span class="dash-chevron">›</span></button>${dashboardSection==='course'?`<div class="panel"><h2>${db.weapon?safe(db.weapon)+' courses':'Select a weapon first'}</h2>${db.weapon?`<div class="courses">${availableCourses(db.weapon).map(c=>`<button class="${db.course===c.id?'selected active':''}" onclick="chooseCourse('${c.id}')">${safe(c.name)}</button>`).join('')||'<p class="muted">No courses assigned. Use Course Editor to assign one.</p>'}</div>${selectedCourse()?`<div class="dashboard-selection"><p class="muted">${safe(selectedCourse().notes)}</p>${!db.sessions[sessionKey()]?'<label class="draft-official">Authenticating Official<input id="newAuthenticatingOfficial" autocomplete="off" placeholder="Official’s name / grade"></label>':''}<button class="primary dashboard-action" onclick="openCourse()">${db.sessions[sessionKey()]?'Continue':'Start'} ${safe(selectedCourse().name)} →</button></div>`:''}`:'<p class="muted">Select a weapon system above to see its courses.</p>'}</div>`:''}<button class="dashboard-card" onclick="tab('active')"><span class="dash-icon">♟</span><span class="dash-copy"><strong>Active Courses</strong><small>Open, manage, or delete saved classes (${Object.keys(db.sessions).length}).</small></span><span class="dash-chevron">›</span></button><button class="dashboard-card" onclick="tab('editor')"><span class="dash-icon">⚙</span><span class="dash-copy"><strong>Course Editor</strong><small>Create and manage reusable course templates.</small></span><span class="dash-chevron">›</span></button><button class="dashboard-card" onclick="tab('weapons')"><span class="dash-icon">✎</span><span class="dash-copy"><strong>Manage Weapon Systems</strong><small>Add or remove weapons available at this location.</small></span><span class="dash-chevron">›</span></button></section>`}
 let dashboardSection='';
 function toggleDashboardSection(section){dashboardSection=dashboardSection===section?'':section;render()}
 
@@ -675,7 +699,29 @@ function completeCourse(){
  save();render();
 }
 function resume(key){const i=key.indexOf('|');db.weapon=key.slice(0,i);db.course=key.slice(i+1);openCourse()}
-function roster(){const s=current();return `<section class="panel"><div class="row between"><h2>${safe(db.weapon)} • ${safe(current()?.template?.name||selectedCourse()?.name||db.course)}</h2><span class="tag">CLASS ROSTER</span></div><div class="grid"><label>Class date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label><label>Default initial rounds<input type="number" min="0" value="${s.defaultRounds}" onchange="updateSession('defaultRounds',this.value)"></label></div><p><button onclick="applyRounds()">Apply rounds to all</button></p><div class="notice">Course names and ammunition defaults may be placeholders. Table status reflects configured minimums only; verify official qualification and refire rules.</div></section><section class="panel"><h2>Class shooters (${s.shooters.length})</h2>${s.shooters.map(p=>`<div class="entry row between"><div><strong>${safe(p.name)}</strong><div class="muted">Lane ${safe(p.lane||'Unassigned')} • Butt # ${safe(p.buttNumber||'—')} • ${progress(p)}/${tableList().length} Tables completed • ${total(p)} rounds</div></div><div class="row"><button class="primary" onclick="openShooter('${p.id}')">Score</button><button onclick="removeShooter('${p.id}')" aria-label="Remove shooter">×</button></div></div>`).join('')||'<p class="muted">No shooters yet. Add a fictional shooter below.</p>'}<h3 style="margin-top:17px">Add shooter</h3><div class="grid"><label>Name<input id="newName" placeholder="Fictional name"></label><label>Lane<input id="newLane" type="number" min="1" placeholder="Lane number"></label><label>Weapon Butt # (optional)<input id="newButtNumber" type="text" placeholder="e.g., 12" autocomplete="off"></label></div><p><button class="primary" onclick="addShooter()">Add shooter</button></p></section>`}
+function rifleForCard(){return /^(M4|M16|M110|AR15)|RIFLE|CARBINE|SDMR|AR-15/i.test(db.weapon||'')}
+function updateShooterCardField(id,field,value){if(!['name','grade','dodId','organization','weaponSerial','buttNumber'].includes(field))return;const p=current()?.shooters.find(x=>x.id===id);if(!p)return;p[field]=value;save()}
+function roster(){
+ const session=current(),rifle=rifleForCard();
+ const editor=p=>`<details class="card-shooter-editor"><summary>Edit DAF 629 details</summary><div class="grid">
+ <label>Name<input value="${safe(p.name)}" onchange="updateShooterCardField('${p.id}','name',this.value)"></label>
+ <label>Grade<input value="${safe(p.grade||'')}" onchange="updateShooterCardField('${p.id}','grade',this.value)"></label>
+ <label>DoD ID (optional)<input inputmode="numeric" value="${safe(p.dodId||'')}" onchange="updateShooterCardField('${p.id}','dodId',this.value)"></label>
+ <label>Organization<input value="${safe(p.organization||'')}" onchange="updateShooterCardField('${p.id}','organization',this.value)"></label>
+ <label>Weapon serial # (optional)<input value="${safe(p.weaponSerial||'')}" onchange="updateShooterCardField('${p.id}','weaponSerial',this.value)"></label>
+ ${rifle?`<label>Rifle Butt #<input value="${safe(p.buttNumber||'')}" onchange="updateShooterCardField('${p.id}','buttNumber',this.value)"></label>`:''}
+ </div></details>`;
+ return `<section class="panel"><div class="row between"><h2>${safe(db.weapon)} · ${safe(session.template?.name||db.course)}</h2><span class="tag">CLASS ROSTER</span></div>
+ <div class="grid"><label>Class / qualification date<input type="date" value="${safe(session.date)}" onchange="updateSession('date',this.value)"></label><label>Authenticating Official<input value="${safe(session.authenticatingOfficial||'')}" onchange="updateSession('authenticatingOfficial',this.value)" placeholder="Name and grade"></label>
+ <label>Default initial rounds<input type="number" min="0" value="${session.defaultRounds}" onchange="updateSession('defaultRounds',this.value)"></label></div><p><button onclick="applyRounds()">Apply rounds to all</button></p>
+ <p class="muted">All DAF 629 draft cards in this class use this authenticating official and qualification date.</p></section>
+ <section class="panel"><h2>Class Shooters (${session.shooters.length})</h2>
+ ${session.shooters.map(p=>`<div class="entry"><div class="row between"><div><strong>${safe(p.name)}</strong><div class="muted">${safe(p.grade||'Grade missing')} · Lane ${safe(p.lane||'—')} · ${progress(p)}/${tableList().length} tables</div></div><div class="row"><button class="primary" onclick="openShooter('${p.id}')">Score</button><button class="danger" onclick="removeShooter('${p.id}')" aria-label="Remove shooter">×</button></div></div>${editor(p)}</div>`).join('')||'<p class="muted">No shooters added yet.</p>'}
+ <h3>Add Shooter</h3><div class="grid"><label>Full name *<input id="newName" autocomplete="off" placeholder="Last, First"></label><label>Grade *<input id="newGrade" placeholder="SSgt"></label><label>Organization *<input id="newOrganization" placeholder="Unit"></label><label>DoD ID (optional)<input id="newDodId" inputmode="numeric" autocomplete="off" placeholder="Optional"></label><label>Lane<input id="newLane" type="number" min="1" placeholder="Lane"></label>
+ <label>Weapon serial # (optional)<input id="newWeaponSerial" autocomplete="off" placeholder="Optional assignment"></label>
+ ${rifle?'<label>Rifle Butt # (optional)<input id="newButtNumber" autocomplete="off" placeholder="Butt number"></label>':'<input id="newButtNumber" type="hidden" value="">'}
+ </div><p><button class="primary" onclick="addShooter()">Add Shooter</button></p></section>`;
+}
 function phaseCell(p,attempt,phase){const obj=(attempt==='initial'?p.initialScores:p.refireScores)[phase]||blank();return `<td>${['head','body','exterior'].map(k=>`<label class="cellfield"><span>${k==='exterior'?'Exterior':k==='head'?'Head':'Body'}</span><input type="number" min="0" inputmode="numeric" placeholder="—" value="${safe(obj[k])}" oninput="setScore('${p.id}','${attempt}','${phase}','${k}',this.value)"></label>`).join('')}<div class="overall"><strong>Overall</strong><strong id="sum-${attempt}-${phase.replace(' ','')}">${sumPhase(obj)}</strong></div></td>`}
 
 let scoreTableIndex=0;
