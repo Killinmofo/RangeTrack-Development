@@ -327,6 +327,34 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
  .grid-result .scorer-status{font-size:9px!important}
 }
 
+
+.draft-official{margin:12px 0 6px}
+.card-shooter-editor{margin-top:10px;padding:9px 11px;border:1px solid #3b474b;border-radius:7px;background:#1a2024}
+.card-shooter-editor summary{cursor:pointer;color:#c7dfa9;font-weight:700}
+.card-shooter-editor .grid{margin-top:12px}
+.card-export-person{display:flex;align-items:center;gap:12px;padding:11px 9px;border-bottom:1px solid #3a4348}
+.card-export-person input{width:19px;min-height:19px;flex:0 0 auto;accent-color:#8ccf54}
+.card-export-person span{display:block}.card-export-person small{display:block;color:#acb7bc;font-weight:400}
+.card-export-list{margin:12px 0;border:1px solid #3a4348;border-radius:8px;max-height:360px;overflow:auto}
+.daf629-print{padding:0!important;display:grid;grid-template-columns:repeat(auto-fit,minmax(295px,1fr));gap:12px}
+.daf629-card{background:#fff;color:#141a1b;border:1px solid #151515;border-radius:0;padding:12px;break-inside:avoid;page-break-inside:avoid;font:11px Arial,sans-serif}
+.card629-top{display:flex;flex-direction:column;border-bottom:2px solid #222;padding-bottom:7px;margin-bottom:8px}
+.card629-top strong{font-size:14px}
+.card629-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.card629-field{border-bottom:1px solid #aaa;min-height:31px;display:flex;flex-direction:column;justify-content:space-between;gap:2px}
+.card629-field span{font-size:9px;color:#4b4b4b;font-weight:600}
+.card629-field strong{font-size:11px;overflow-wrap:anywhere}
+.card629-signatures{display:grid;gap:9px;margin:13px 0 9px}
+.card629-signatures>div{display:flex;gap:10px;align-items:end;font-size:10px}
+.card629-signatures span{flex:1;border-bottom:1px solid #222;min-height:18px}
+.card629-disclaimer{font-size:8px;color:#555;border-top:1px solid #aaa;padding-top:5px}
+@media print{
+ @page{size:letter portrait;margin:8mm}
+ .daf629-print{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5mm!important;padding:0!important;background:white!important;color:#111!important}
+ .daf629-card{border:1px solid #222!important;padding:8px!important;box-shadow:none!important;color:#111!important;background:#fff!important}
+ .daf629-card *{color:#111!important}
+}
+
 </style>
 <style id="rangetrack-export-styles">
 #printReport{background:white;color:#161b20;padding:20px;font:12px Arial,sans-serif;overflow:auto}
@@ -922,7 +950,60 @@ function exportPDF(){
 }
 function closePrintReport(){if(window.__rangeTrackPrintRestore){window.__rangeTrackPrintRestore();window.__rangeTrackPrintRestore=null;}else render();}
 
-function totals(){const s=current();return `<section class="panel"><h2>Course totals</h2><p style="font-size:30px;margin:0"><strong>${s.shooters.reduce((a,p)=>a+total(p),0)}</strong> <span class="muted">rounds</span></p><p class="muted">${s.shooters.length} shooters • ${safe(db.weapon)} ${safe(db.course)} • ${safe(s.date)}</p></section><section class="panel"><h2>Shooter progress</h2>${s.shooters.map(p=>`<div class="entry row between"><div><strong>${safe(p.name)}</strong><div class="muted">Lane ${safe(p.lane||'—')} • Butt # ${safe(p.buttNumber||'—')} • ${progress(p)}/${tableList().length} initial Tables • Failed initial Tables: ${tableList().filter(t=>tableStatus(p,'initial',t)==='Fail').length} • Remedial: ${remedialActive(p)?'Initiated':'Not initiated'}</div></div><strong>${total(p)} rds</strong></div>`).join('')||'<p class="muted">No shooters added.</p>'}</section><section class="panel"><h2>Class Qualification Report</h2><div class="report-preview">${reportHTML()}</div></section><section class="panel"><h2>Export Results</h2><p class="muted">Export the class summary with shooter, lane, butt number, ammunition, each Firing Table result, total score, and overall result. Detailed scoring remains available in each shooter’s record.</p><div class="row"><button class="primary" onclick="exportExcel()">Export to Excel (CSV)</button><button class="primary" onclick="exportPDF()">Export to PDF</button></div></section><section class="panel dangerarea"><h2>Complete Course</h2><p class="muted">Finished with this class? Remove it from Active Courses and return to the dashboard. This permanently deletes its shooter records and scores, so export or record any results you need before continuing.</p><button class="danger" onclick="completeCourse()">Complete Course</button></section><section class="panel dangerarea"><h2>Reset this class</h2><p class="muted">Deletes all shooters, lane assignments, scores, refires and ammunition for this weapon/course only. Other course sessions remain saved.</p><button class="danger" onclick="clearAll()">Clear All</button></section>`}
+function cardExpiration(value){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return '';
+ const [year,month,day]=value.split('-').map(Number);
+ if(month<1||month>12||day<1||day>new Date(Date.UTC(year,month,0)).getUTCDate())return '';
+ return new Date(Date.UTC(year+1,month,0)).toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric',timeZone:'UTC'});
+}
+function qualifiedFor629(p){return ['Qualified','Expert','Pass'].includes(overallStatus(p))}
+function cardReadiness(p){
+ const missing=[];
+ if(!p.name?.trim())missing.push('name');
+ if(!p.grade?.trim())missing.push('grade');
+ if(!p.organization?.trim())missing.push('organization');
+ if(!current()?.authenticatingOfficial?.trim())missing.push('authenticating official');
+ if(!cardExpiration(current()?.date))missing.push('class date');
+ return missing;
+}
+function setCardSelection(checked){document.querySelectorAll('input[data-card-shooter]').forEach(input=>{if(!input.disabled)input.checked=checked})}
+function cardExportMarkup(){
+ const session=current(),eligible=session.shooters.filter(qualifiedFor629);
+ const ready=eligible.filter(p=>!cardReadiness(p).length);
+ return `<section class="panel card-export"><div class="row between"><h2>DAF 629 Cards</h2><span class="tag">DRAFT</span></div>
+ <p class="muted">Create printable draft cards from this class. Only qualified shooters with required card details are selectable. DoD ID and serial number may be blank.</p>
+ <p><strong>${ready.length}</strong> card-ready · <strong>${eligible.length-ready.length}</strong> qualified but missing details · <strong>${session.shooters.length-eligible.length}</strong> not qualified</p>
+ <div class="row"><button onclick="setCardSelection(true)">Select All Ready</button><button onclick="setCardSelection(false)">Clear</button></div>
+ <div class="card-export-list">${session.shooters.map(p=>{
+ const q=qualifiedFor629(p),missing=cardReadiness(p),ok=q&&!missing.length;
+ return `<label class="card-export-person"><input type="checkbox" data-card-shooter value="${safe(p.id)}" ${ok?'checked':'disabled'}><span><strong>${safe(p.name)}</strong><small>${ok?'Ready':!q?'Not qualified':'Missing: '+safe(missing.join(', '))}</small></span></label>`;
+ }).join('')}</div>
+ <p><button class="primary" onclick="export629Cards()">Generate Selected DAF 629s</button></p>
+ <p class="muted">Draft layout only. Check actual DAF Form 629 blocks and signatures before official use.</p></section>`;
+}
+function card629HTML(p){
+ const session=current(),weapon=db.weapon||'';
+ const line=(label,value)=>`<div class="card629-field"><span>${label}</span><strong>${safe(value||'')}</strong></div>`;
+ return `<article class="daf629-card"><div class="card629-top"><strong>DAF 629 · DRAFT</strong><small>Small Arms Hand Receipt / Qualification Card</small></div>
+ <div class="card629-fields">${line('Name',p.name)}${line('Grade',p.grade)}${line('DoD ID',p.dodId||'')}${line('Organization',p.organization)}
+ ${line('Weapon',weapon)}${line('Weapon Serial #',p.weaponSerial||'')}${rifleForCard()?line('Butt #',p.buttNumber||''):''}
+ ${line('Qualification Date',session.date)}${line('Qualification Expires',cardExpiration(session.date))}
+ ${line('Authenticating Official',session.authenticatingOfficial)}
+ </div>
+ <div class="card629-signatures"><div>Authenticating Official Signature <span></span></div><div>Individual Signature <span></span></div><div>Date Signed <span></span></div></div>
+ <div class="card629-disclaimer">DRAFT · Verify against current approved form and local signing requirements</div></article>`;
+}
+function export629Cards(){
+ const selected=new Set([...document.querySelectorAll('input[data-card-shooter]:checked')].map(x=>x.value));
+ const candidates=current().shooters.filter(p=>selected.has(p.id)&&qualifiedFor629(p)&&!cardReadiness(p).length);
+ if(!candidates.length){alert('Select at least one qualified shooter with complete required card information.');return;}
+ const app=document.getElementById('app'),nav=document.getElementById('nav');
+ if(!app||!nav)return;
+ nav.innerHTML='';
+ app.innerHTML=`<section class="export-controls panel"><button onclick="closePrintReport()">← Back to Totals</button> <button class="primary" onclick="window.print()">Print / Save as PDF</button><p class="muted">${candidates.length} draft card(s). Check the approved form before use.</p></section><div id="printReport" class="daf629-print">${candidates.map(card629HTML).join('')}</div>`;
+ window.__rangeTrackPrintRestore=()=>render();
+}
+function totals(){const s=current();return `<section class="panel"><h2>Course totals</h2><p style="font-size:30px;margin:0"><strong>${s.shooters.reduce((a,p)=>a+total(p),0)}</strong> <span class="muted">rounds</span></p><p class="muted">${s.shooters.length} shooters • ${safe(db.weapon)} ${safe(db.course)} • ${safe(s.date)}</p></section><section class="panel"><h2>Shooter progress</h2>${s.shooters.map(p=>`<div class="entry row between"><div><strong>${safe(p.name)}</strong><div class="muted">Lane ${safe(p.lane||'—')} • Butt # ${safe(p.buttNumber||'—')} • ${progress(p)}/${tableList().length} initial Tables • Failed initial Tables: ${tableList().filter(t=>tableStatus(p,'initial',t)==='Fail').length} • Remedial: ${remedialActive(p)?'Initiated':'Not initiated'}</div></div><strong>${total(p)} rds</strong></div>`).join('')||'<p class="muted">No shooters added.</p>'}</section><section class="panel"><h2>Class Qualification Report</h2><div class="report-preview">${reportHTML()}</div></section><section class="panel"><h2>Export Results</h2><p class="muted">Export the class summary with shooter, lane, butt number, ammunition, each Firing Table result, total score, and overall result. Detailed scoring remains available in each shooter’s record.</p><div class="row"><button class="primary" onclick="exportExcel()">Export to Excel (CSV)</button><button class="primary" onclick="exportPDF()">Export to PDF</button></div></section>${cardExportMarkup()}<section class="panel dangerarea"><h2>Complete Course</h2><p class="muted">Finished with this class? Remove it from Active Courses and return to the dashboard. This permanently deletes its shooter records and scores, so export or record any results you need before continuing.</p><button class="danger" onclick="completeCourse()">Complete Course</button></section><section class="panel dangerarea"><h2>Reset this class</h2><p class="muted">Deletes all shooters, lane assignments, scores, refires and ammunition for this weapon/course only. Other course sessions remain saved.</p><button class="danger" onclick="clearAll()">Clear All</button></section>`}
 function refreshLive(){
  const p=shooter();if(!p)return;
  const r=document.getElementById('roundTotal');if(r)r.textContent='Total ammunition: '+total(p)+' rounds';
