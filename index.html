@@ -399,6 +399,40 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
  #printReport .result-pass,#printReport .result-fail{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  #printReport .report-heading{break-after:avoid}#printReport .report-table tr{break-inside:avoid}
 }
+
+/* Wallet-size DAF 629 draft. Each side exactly CR80 / ID-1 size 3.375 x 2.125 inches. */
+.daf629-print{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:.22in!important;padding:12px!important;background:#fff!important;color:#151515!important}
+.wallet-pair{display:flex;gap:.12in;align-items:flex-start;justify-content:flex-start;break-inside:avoid;page-break-inside:avoid;margin:0!important}
+.wallet-card{box-sizing:border-box!important;width:3.375in!important;height:2.125in!important;min-width:3.375in!important;max-width:3.375in!important;min-height:2.125in!important;max-height:2.125in!important;overflow:hidden!important;flex:none!important;padding:.105in!important;background:#fff!important;color:#141414!important;border:1px solid #333!important;border-radius:0!important;box-shadow:none!important;font:8px/1.15 Arial,Helvetica,sans-serif!important;display:flex;flex-direction:column;break-inside:avoid}
+.wallet-card *{box-sizing:border-box}
+.wallet-head{display:flex;align-items:center;justify-content:space-between;gap:4px;border-bottom:1px solid #222;padding-bottom:4px;margin-bottom:5px;white-space:nowrap}
+.wallet-head strong{font-size:10px;letter-spacing:.2px}
+.wallet-head span{font-size:6.5px;letter-spacing:.2px}
+.wallet-fields{display:grid;grid-template-columns:1fr 1fr;gap:3px 7px;flex:1;align-content:start}
+.wallet-field{display:flex;flex-direction:column;min-width:0;border-bottom:1px solid #aaa;min-height:24px;padding:0 0 2px;justify-content:center}
+.wallet-field span{font-size:6.6px;color:#484848;font-weight:700;letter-spacing:.15px}
+.wallet-field strong{display:block;overflow-wrap:anywhere;font-size:8.5px;line-height:1.12}
+.wallet-front .wallet-field:nth-child(1),.wallet-front .wallet-field:nth-child(4){grid-column:span 2}
+.wallet-foot{margin-top:auto;border-top:1px solid #bbb;padding-top:3px;font-size:6px;color:#777;text-align:right;letter-spacing:.25px}
+.wallet-official{margin:2px 0 5px}
+.wallet-signature{display:flex;flex-direction:column;margin-top:8px;gap:2px}
+.wallet-signature span{font-size:6.7px;font-weight:700;letter-spacing:.15px}
+.wallet-signature div{height:12px;border-bottom:1px solid #444}
+.wallet-back-note{font-size:6px;color:#666;margin-top:7px}
+@media screen and (max-width:760px){.daf629-print{overflow-x:auto!important;width:100%!important}.wallet-pair{min-width:6.87in}}
+@media print{
+ @page{size:letter portrait;margin:.35in}
+ html,body{background:#fff!important}
+ body>header{display:none!important}
+ body>main{display:block!important;padding:0!important;margin:0!important;max-width:none!important;background:#fff!important}
+ main>#nav,main>.footer,.export-controls{display:none!important}
+ #app{display:block!important;background:#fff!important;margin:0!important;padding:0!important;max-width:none!important}
+ #printReport.daf629-print{display:flex!important;flex-direction:column!important;gap:.22in!important;align-items:flex-start!important;padding:0!important;margin:0!important;overflow:visible!important}
+ .wallet-pair{display:flex!important;gap:.12in!important;break-inside:avoid!important;page-break-inside:avoid!important}
+ .wallet-card{width:3.375in!important;height:2.125in!important;min-width:3.375in!important;max-width:3.375in!important;min-height:2.125in!important;max-height:2.125in!important;page-break-inside:avoid!important;background:white!important;color:black!important}
+ .wallet-card *{color:#161616!important}
+}
+
 </style>
 </head><body><header class="brand-header"><div class="brand-inner"><div class="brand-text"><h1>RANGE<span>TRACK</span></h1><div class="brand-sub">CATM QUALIFICATION SYSTEM</div></div></div></header><main><div id="nav" class="tabs"></div><div id="app"></div><div class="footer">RangeTrack • Data stored locally on this device. Verify course standards and refire policy before operational use.</div></main><script>
 'use strict';
@@ -983,15 +1017,22 @@ function cardExportMarkup(){
 }
 function card629HTML(p){
  const session=current(),weapon=db.weapon||'';
- const line=(label,value)=>`<div class="card629-field"><span>${label}</span><strong>${safe(value||'')}</strong></div>`;
- return `<article class="daf629-card"><div class="card629-top"><strong>DAF 629 · DRAFT</strong><small>Small Arms Hand Receipt / Qualification Card</small></div>
- <div class="card629-fields">${line('Name',p.name)}${line('Grade',p.grade)}${line('DoD ID',p.dodId||'')}${line('Organization',p.organization)}
- ${line('Weapon',weapon)}${line('Weapon Serial #',p.weaponSerial||'')}${rifleForCard()?line('Butt #',p.buttNumber||''):''}
- ${line('Qualification Date',session.date)}${line('Qualification Expires',cardExpiration(session.date))}
- ${line('Authenticating Official',session.authenticatingOfficial)}
- </div>
- <div class="card629-signatures"><div>Authenticating Official Signature <span></span></div><div>Individual Signature <span></span></div><div>Date Signed <span></span></div></div>
- <div class="card629-disclaimer">DRAFT · Verify against current approved form and local signing requirements</div></article>`;
+ const line=(label,value)=>`<div class="wallet-field"><span>${label}</span><strong>${safe(value||'—')}</strong></div>`;
+ return `<div class="wallet-pair">
+ <article class="wallet-card wallet-front">
+ <div class="wallet-head"><strong>DAF 629 · DRAFT</strong><span>SMALL ARMS HAND RECEIPT</span></div>
+ <div class="wallet-fields">${line('NAME',p.name)}${line('GRADE',p.grade)}${line('DoD ID',p.dodId||'')}${line('ORGANIZATION',p.organization)}
+ ${line('WEAPON',weapon)}${line('SERIAL NUMBER',p.weaponSerial||'')}${rifleForCard()?line('BUTT #',p.buttNumber||''):''}
+ ${line('QUAL DATE',session.date)}${line('QUAL EXPIRES',cardExpiration(session.date))}
+ </div><div class="wallet-foot">FRONT · DRAFT CARD</div></article>
+ <article class="wallet-card wallet-back"><div class="wallet-head"><strong>DAF 629 · DRAFT</strong><span>AUTHORIZATION</span></div>
+ <div class="wallet-official">${line('AUTHENTICATING OFFICIAL',session.authenticatingOfficial)}</div>
+ <div class="wallet-signature"><span>AUTHENTICATING OFFICIAL SIGNATURE</span><div></div></div>
+ <div class="wallet-signature"><span>INDIVIDUAL SIGNATURE</span><div></div></div>
+ <div class="wallet-signature"><span>DATE SIGNED</span><div></div></div>
+ <div class="wallet-back-note">DRAFT · Verify against approved DAF Form 629 before official use</div>
+ <div class="wallet-foot">BACK · DRAFT CARD</div></article>
+ </div>`;
 }
 function export629Cards(){
  const selected=new Set([...document.querySelectorAll('input[data-card-shooter]:checked')].map(x=>x.value));
@@ -1000,7 +1041,7 @@ function export629Cards(){
  const app=document.getElementById('app'),nav=document.getElementById('nav');
  if(!app||!nav)return;
  nav.innerHTML='';
- app.innerHTML=`<section class="export-controls panel"><button onclick="closePrintReport()">← Back to Totals</button> <button class="primary" onclick="window.print()">Print / Save as PDF</button><p class="muted">${candidates.length} draft card(s). Check the approved form before use.</p></section><div id="printReport" class="daf629-print">${candidates.map(card629HTML).join('')}</div>`;
+ app.innerHTML=`<section class="export-controls panel"><button onclick="closePrintReport()">← Back to Totals</button> <button class="primary" onclick="window.print()">Print / Save as PDF</button><p class="muted">${candidates.length} draft wallet card(s), each with a front and back. Print on Letter paper at 100% / Actual Size with scaling disabled, then cut and fold.</p></section><div id="printReport" class="daf629-print">${candidates.map(card629HTML).join('')}</div>`;
  window.__rangeTrackPrintRestore=()=>render();
 }
 function totals(){const s=current();return `<section class="panel"><h2>Course totals</h2><p style="font-size:30px;margin:0"><strong>${s.shooters.reduce((a,p)=>a+total(p),0)}</strong> <span class="muted">rounds</span></p><p class="muted">${s.shooters.length} shooters • ${safe(db.weapon)} ${safe(db.course)} • ${safe(s.date)}</p></section><section class="panel"><h2>Shooter progress</h2>${s.shooters.map(p=>`<div class="entry row between"><div><strong>${safe(p.name)}</strong><div class="muted">Lane ${safe(p.lane||'—')} • Butt # ${safe(p.buttNumber||'—')} • ${progress(p)}/${tableList().length} initial Tables • Failed initial Tables: ${tableList().filter(t=>tableStatus(p,'initial',t)==='Fail').length} • Remedial: ${remedialActive(p)?'Initiated':'Not initiated'}</div></div><strong>${total(p)} rds</strong></div>`).join('')||'<p class="muted">No shooters added.</p>'}</section><section class="panel"><h2>Class Qualification Report</h2><div class="report-preview">${reportHTML()}</div></section><section class="panel"><h2>Export Results</h2><p class="muted">Export the class summary with shooter, lane, butt number, ammunition, each Firing Table result, total score, and overall result. Detailed scoring remains available in each shooter’s record.</p><div class="row"><button class="primary" onclick="exportExcel()">Export to Excel (CSV)</button><button class="primary" onclick="exportPDF()">Export to PDF</button></div></section>${cardExportMarkup()}<section class="panel dangerarea"><h2>Complete Course</h2><p class="muted">Finished with this class? Remove it from Active Courses and return to the dashboard. This permanently deletes its shooter records and scores, so export or record any results you need before continuing.</p><button class="danger" onclick="completeCourse()">Complete Course</button></section><section class="panel dangerarea"><h2>Reset this class</h2><p class="muted">Deletes all shooters, lane assignments, scores, refires and ammunition for this weapon/course only. Other course sessions remain saved.</p><button class="danger" onclick="clearAll()">Clear All</button></section>`}
