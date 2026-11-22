@@ -192,7 +192,7 @@ function roster(){
  return `<div class="rt-shooters-view">
   <section class="rt-shooters-card">
    <header class="rt-shooters-card-head">
-    <div class="rt-roster-heading">${rtRosterIcon('users')}<h2>Shooters</h2></div>
+    <div class="rt-roster-heading">${rtRosterIcon('users')}<div class="rt-roster-heading-text"><h2>Shooters</h2><div class="rt-roster-class-name"><strong>${safe(s.template?.name||selectedCourse()?.name||'Saved Class')}</strong><span>${safe(db.weapon||'Weapon not specified')}</span></div></div></div>
     <span class="rt-roster-count">${shooters.length} ${shooters.length===1?'Shooter':'Shooters'}</span>
    </header>
    <div class="rt-shooters-body">
