@@ -211,6 +211,17 @@ function roster(){
      <div class="rt-stat-assigned"><strong>${assigned}</strong><span>Lane Assigned</span></div>
      <div class="rt-stat-incomplete"><strong>${incomplete}</strong><span title="Missing personnel information">Missing Prsnl Info</span></div>
     </div>
+    <details class="rt-class-settings">
+     <summary><span class="rt-class-settings-title"><span class="rt-class-settings-icon" aria-hidden="true">⚙</span><span><strong>Class Settings</strong><small>Date and ammunition defaults</small></span></span><span class="rt-class-settings-chevron" aria-hidden="true"></span></summary>
+     <div class="rt-class-settings-content"><div class="rt-class-settings-fields">
+      <label>Class Date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label>
+      <label>Default Initial Rounds<input type="number" min="0" value="${safe(s.defaultRounds||0)}" onchange="updateSession('defaultRounds',this.value)"></label>
+     </div>
+     <button type="button" onclick="applyRounds()">Apply rounds to all shooters</button>
+     <p class="muted">Set the qualification date and default ammunition for this class.</p>
+    </div>
+    </div>
+    </details>
     <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
     <div class="rt-roster-bulkbar">
      <label class="rt-roster-all-label"><input id="rt-roster-select-all" type="checkbox" aria-label="Select all visible shooters" onchange="rtRosterSelectAll(this.checked)" ${shooters.length&&shooters.every(p=>rtRosterCopySelected.has(p.id))?'checked':''}><span>Select All</span></label>
@@ -231,15 +242,7 @@ function roster(){
       </div>`).join('')||'<p class="rt-roster-empty">No shooters added yet. Tap Add Shooter below to get started.</p>'}
     </div>
     <p id="rt-roster-search-status" class="rt-search-status" aria-live="polite"></p>
-    <details class="rt-class-settings">
-     <summary>Class settings</summary>
-     <div class="rt-class-settings-fields">
-      <label>Class Date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label>
-      <label>Default Initial Rounds<input type="number" min="0" value="${safe(s.defaultRounds||0)}" onchange="updateSession('defaultRounds',this.value)"></label>
-     </div>
-     <button type="button" onclick="applyRounds()">Apply rounds to all shooters</button>
-     <p class="muted">Set the qualification date and default ammunition for this class.</p>
-    </details>
+
    </div>
   </section>
   <div id="rt-modal-root"></div>
