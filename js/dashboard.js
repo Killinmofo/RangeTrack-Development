@@ -10,10 +10,15 @@ function dashboard(){
    <p>Manage weapons, qualification courses, and active training sessions from one place.</p>
    <div class="rt-dashboard-hero-foot"><span>QUALIFICATION SYSTEM</span><strong>${activeCount} ACTIVE ${activeCount===1?'CLASS':'CLASSES'}</strong></div>
   </section>
-  <section class="rt-dashboard-stats" aria-label="Training overview">
-   <div><strong>${activeCount}</strong><small>ACTIVE CLASSES</small></div>
-   <div><strong>${WEAPONS.length}</strong><small>WEAPON SYSTEMS</small></div>
-   <div><strong>${db.courses.length}</strong><small>COURSE TEMPLATES</small></div>
+  <section class="rt-dashboard-active-overview" aria-label="Active classes overview">
+   <div class="rt-dashboard-active-count"><strong>${activeCount}</strong><small>ACTIVE ${activeCount===1?'CLASS':'CLASSES'}</small></div>
+   <div class="rt-dashboard-active-courses"><span>ACTIVE COURSE${activeCount===1?'':'S'}</span>
+    ${activeCount?Object.entries(db.sessions).map(([key,session])=>{
+      const courseName=session.template?.name||courseById(key.split('|')[1])?.name||'Unnamed Course';
+      const weaponName=key.split('|')[0]||'';
+      return `<div class="rt-dashboard-active-course"><strong>${safe(courseName)}</strong>${weaponName?`<small>${safe(weaponName)}</small>`:''}</div>`;
+    }).join(''):'<p>No active courses</p>'}
+   </div>
   </section>
   <section class="rt-dashboard-shell">
    <header class="rt-dashboard-section-heading"><span class="rt-eyebrow">01 / CLASS SETUP</span><h3>Start or Continue Training</h3></header>
