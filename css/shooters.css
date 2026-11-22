@@ -202,3 +202,10 @@
  .rt-roster-bulk-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
  .rt-roster-bulk-actions button{min-width:0;width:100%}
 }
+
+/* Identify the current saved class directly in the Shooters header. */
+.rt-roster-heading-text{min-width:0;display:flex;flex-direction:column;gap:6px}
+.rt-roster-class-name{display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;min-width:0;line-height:1.3}
+.rt-roster-class-name strong{color:#c2e99f;font-size:12px;font-weight:850;overflow-wrap:anywhere}
+.rt-roster-class-name span{color:#c2d0c5;border-left:1px solid #698268;padding-left:8px;font-size:11px;font-weight:750}
+@media(max-width:390px){.rt-roster-heading-text{gap:4px}.rt-roster-class-name strong{font-size:11px}.rt-roster-class-name span{font-size:10px}}
