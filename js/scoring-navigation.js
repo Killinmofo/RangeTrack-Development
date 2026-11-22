@@ -20,10 +20,16 @@ function rtKeyboardLayout(){
  document.body.classList.toggle('rt-scoring-keyboard',isOpen);
  if(isOpen)rtVisibleScore();
 }
+// A text input with numeric keyboard supports selection ranges on iOS Safari.
+function rtSelectScoreValue(el){
+ if(!el || !el.value)return;
+ try{el.select();}catch(error){console.warn('RangeTrack: score selection not supported',error);}
+}
 function rtFocusScore(el){
  if(!el)return;
  rtLastField=rtFieldKey(el);
  el.focus({preventScroll:true});
+ rtSelectScoreValue(el);
  requestAnimationFrame(rtVisibleScore);
  setTimeout(rtVisibleScore,130);
  setTimeout(rtVisibleScore,390);
@@ -76,7 +82,10 @@ function rtNextScoreField(){
 }
 document.addEventListener('focusin',e=>{
  if(!e.target.matches?.('.rt-score-input'))return;
- rtLastField=rtFieldKey(e.target);rtFocusScore(e.target);rtKeyboardLayout();
+ rtLastField=rtFieldKey(e.target);rtSelectScoreValue(e.target);rtKeyboardLayout();
+ requestAnimationFrame(rtVisibleScore);
+ setTimeout(rtVisibleScore,130);
+ setTimeout(rtVisibleScore,390);
 });
 document.addEventListener('input',e=>{if(e.target.matches?.('.rt-score-input'))rtUpdateNextScoreButton();});
 document.addEventListener('keydown',e=>{
