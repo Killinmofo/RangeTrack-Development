@@ -29,7 +29,9 @@ function rtFocusScore(el){
  setTimeout(rtVisibleScore,390);
 }
 function rtUpdateNextScoreButton(){
- const btn=document.querySelector('.rt-next-btn');if(!btn)return;
+ const btn=document.querySelector('.rt-next-btn');
+ const back=document.querySelector('.rt-prev-btn');
+ if(!btn&&!back)return;
  const fields=rtFields();
  const lastIndex=fields.length-1;
  const index=fields.findIndex(el=>rtFieldKey(el)===rtLastField);
@@ -37,10 +39,22 @@ function rtUpdateNextScoreButton(){
  const complete=fields.length>0&&fields.every(el=>el.value!=='');
  const finalTable=scoreTableIndex>=tableList().length-1;
  const canAdvance=atEnd&&complete&&!finalTable;
+ if(back){back.disabled=!fields.length;back.setAttribute('aria-label','Go to previous scoring field');}
+ if(!btn)return;
  btn.disabled=!fields.length||(atEnd&&complete&&finalTable);
  const label=btn.querySelector('small');
  if(label)label.textContent=canAdvance?'Next Table':(atEnd&&complete&&finalTable?'Complete':'Next Field');
  btn.setAttribute('aria-label',canAdvance?'Go to next firing table':atEnd&&complete&&finalTable?'Scoring complete':'Go to next scoring field');
+}
+function rtPreviousScoreField(){
+ const fields=rtFields();
+ if(!fields.length)return;
+ const currentIndex=fields.findIndex(el=>rtFieldKey(el)===rtLastField);
+ // From no selection, start at the last visible scoring field.
+ // At the first field, remain on the first field rather than silently switching tables.
+ const previous=currentIndex===-1?fields[fields.length-1]:fields[Math.max(0,currentIndex-1)];
+ rtFocusScore(previous);
+ rtUpdateNextScoreButton();
 }
 function rtNextScoreField(){
  const fields=rtFields();if(!fields.length)return;
