@@ -121,7 +121,7 @@ function rtRosterCopy(onlySelected=false){
    <p class="rt-copy-person"><strong>${people.length} ${people.length===1?'shooter':'shooters'} selected</strong></p>
    <div class="rt-copy-names">${people.map(p=>`<span>${safe(p.name)}</span>`).join('')}</div>
    <label>Destination Active Class<select name="target" required>${destinations.map(([key,s],i)=>`<option value="${i}">${safe(s.template?.name||'Saved Class')} (${safe(key.split('|')[0])})${s.date?' · '+safe(s.date):''}</option>`).join('')}</select></label>
-   <p class="rt-copy-note">Only name, grade/rank, and organization are copied. Lane, butt number, weapon SN, scores, and remedials stay with the original class. New shooters use the destination class's default initial rounds. Existing names in the destination will be skipped.</p>
+   <p class="rt-copy-note">Name, grade/rank, organization, and assigned lane are copied. You can change the lane afterward. Butt number, weapon SN, scores, and remedials stay with the original class. New shooters use the destination class's default initial rounds. Existing names in the destination will be skipped.</p>
    <footer><button type="button" onclick="rtCloseCopyShooter()">Cancel</button><button type="submit" class="primary">Copy ${people.length===1?'Shooter':'Shooters'}</button></footer>
   </form></section></div>`;
  document.body.classList.add('rt-modal-open');
@@ -147,7 +147,7 @@ function rtSaveCopyShooter(event){
  for(const p of people){
   const normalized=String(p.name||'').trim().toLocaleLowerCase();
   if(names.has(normalized)){skipped++;continue;}
-  const copied=makeShooter(p.name,'',n(target.defaultRounds??target.template?.defaultRounds??0));
+  const copied=makeShooter(p.name,p.lane??'',n(target.defaultRounds??target.template?.defaultRounds??0));
   copied.grade=p.grade||'';
   copied.organization=p.organization||'';
   target.shooters.push(copied);names.add(normalized);added++;
@@ -155,7 +155,7 @@ function rtSaveCopyShooter(event){
  if(added)save();
  rtCloseCopyShooter();
  rtRosterCopySelected.clear();
- window.alert(added+' '+(added===1?'shooter':'shooters')+' copied to '+(target.template?.name||'the selected class')+' ('+key.split('|')[0]+').'+(skipped?' '+skipped+' already present and skipped.':'')+' Open that class from the Dashboard to assign lanes and weapon details.');
+ window.alert(added+' '+(added===1?'shooter':'shooters')+' copied to '+(target.template?.name||'the selected class')+' ('+key.split('|')[0]+').'+(skipped?' '+skipped+' already present and skipped.':'')+' Open that class from the Dashboard to review lanes and assign weapon details.');
  render();
 }
 function rtRosterMoreToggle(){
