@@ -216,7 +216,7 @@ function openScoreShooterModal(mode){
  <label>Full name<input name="name" required autocomplete="off" value="${safe(p?.name||'')}" placeholder="Smith, John"></label>
  <div class="rt-modal-grid"><label>Lane<input name="lane" type="number" min="1" value="${safe(p?.lane??'')}"></label><label>Initial Ammo<input name="initial" type="number" min="0" value="${safe(p?.initial??s.defaultRounds??0)}"></label></div>
  <div class="rt-modal-grid"><label>Grade/Rank (optional)<input name="grade" autocomplete="off" value="${safe(p?.grade||'')}"></label><label>Organization (optional)<input name="organization" autocomplete="off" value="${safe(p?.organization||'')}"></label></div>
- <div class="rt-modal-grid"><label>Butt # (optional)<input name="buttNumber" autocomplete="off" value="${safe(p?.buttNumber||'')}" placeholder="Butt number"></label><label>Weapon Serial Number (optional)<input name="weaponSerial" autocomplete="off" value="${safe(p?.weaponSerial||'')}" placeholder="Serial number"></label></div>
+ <div class="rt-modal-grid"><label>Butt # (optional)<input name="buttNumber" autocomplete="off" value="${safe(p?.buttNumber||'')}" placeholder="Butt number"></label><label>Weapon SN (optional)<input name="weaponSerial" autocomplete="off" value="${safe(p?.weaponSerial||'')}" placeholder="Serial number"></label></div>
  <footer><button type="button" onclick="closeScoreShooterModal()">Cancel</button><button type="submit" class="primary">${p?'Save Changes':'Add Shooter'}</button></footer>
  </form></section></div>`;
  document.body.classList.add('rt-modal-open');
