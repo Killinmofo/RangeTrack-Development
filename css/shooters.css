@@ -192,3 +192,13 @@
  .rt-roster-bulkbar{gap:7px;padding:8px 7px}
  #rt-roster-selected-count{font-size:10px}
 }
+
+/* Bulk action buttons: copy or remove checked shooters only. */
+.rt-roster-bulk-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#rt-roster-remove-selected{background:#39282b;border:1px solid #9b6769;border-radius:8px;color:#ffc8c6;font-weight:850;font-size:11px;min-height:34px;padding:6px 9px}
+#rt-roster-remove-selected:hover:not(:disabled){background:#543036}
+#rt-roster-remove-selected:disabled{opacity:.4}
+@media(max-width:600px){
+ .rt-roster-bulk-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rt-roster-bulk-actions button{min-width:0;width:100%}
+}
