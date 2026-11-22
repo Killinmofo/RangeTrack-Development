@@ -11,9 +11,9 @@ function reportTableResult(p,t){
 }
 function exportRows(){
  const session=current(),tables=tableList();
- const headers=['Name','Lane','Ammo',...tables.map(t=>t.name),'Total Score','Overall'];
+ const headers=['Name','Lane','Butt #','Weapon Serial','Ammo',...tables.map(t=>t.name),'Total Score','Overall'];
  const rows=session.shooters.map(p=>[
-  p.name,p.lane??'',total(p),
+  p.name,p.lane??'',p.buttNumber||'',p.weaponSerial||'',total(p),
   ...tables.map(t=>reportTableResult(p,t)),
   effectivePaperTotal(p)===''?'':effectivePaperTotal(p),reportResult(overallStatus(p))
  ]);
@@ -30,7 +30,7 @@ function reportHTML(){
  const rate=stats.count?Math.round(stats.passed/stats.count*100):0;
  const header=`<div class="report-heading"><h2>RangeTrack | CATM Qualification Report</h2><p><strong>${safe(db.weapon)} • ${safe(session.template?.name||db.course)}</strong> &nbsp; | &nbsp; ${safe(session.date||'—')}</p><p>Class Summary &nbsp; | &nbsp; Shooters: <strong>${stats.count}</strong> &nbsp; Passed: <strong>${stats.passed}</strong> &nbsp; Failed: <strong>${stats.failed}</strong> &nbsp; Incomplete: <strong>${stats.incomplete}</strong> &nbsp; Pass Rate: <strong>${rate}%</strong></p></div>`;
  const cols=`<thead><tr><th>#</th>${headers.map(h=>`<th>${safe(h)}</th>`).join('')}</tr></thead>`;
- const body=rows.map((row,i)=>`<tr><td data-label="#">${i+1}</td>${row.map((value,j)=>{const v=value===''?'—':value;const cls=(j>=3&&j!==headers.length-2)?(String(v).startsWith('PASS')?' result-pass':String(v)==='FAIL'?' result-fail':''):'';return `<td data-label="${safe(headers[j])}" class="${cls}">${safe(v)}</td>`}).join('')}</tr>`).join('')||`<tr><td colspan="${headers.length+1}">No shooters added.</td></tr>`;
+ const body=rows.map((row,i)=>`<tr><td data-label="#">${i+1}</td>${row.map((value,j)=>{const v=value===''?'—':value;const cls=(j>=5&&j!==headers.length-2)?(String(v).startsWith('PASS')?' result-pass':String(v)==='FAIL'?' result-fail':''):'';return `<td data-label="${safe(headers[j])}" class="${cls}">${safe(v)}</td>`}).join('')}</tr>`).join('')||`<tr><td colspan="${headers.length+1}">No shooters added.</td></tr>`;
  return `${header}<div class="report-table-wrap"><table class="report-table">${cols}<tbody>${body}</tbody></table></div><p class="report-note">(R) indicates a successful remedial attempt. Ammunition includes additional rounds. Scores reflect the final effective attempt for each table.</p>`;
 }
 function reportFilename(ext){
