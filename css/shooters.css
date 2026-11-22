@@ -112,3 +112,8 @@
  min-width:0;
  overflow:hidden;
 }
+
+/* Wrap descriptive roster summary labels without overflowing phone-sized tiles. */
+.rt-shooters-stats>div{padding:7px 3px;box-sizing:border-box;min-height:93px}
+.rt-shooters-stats span{display:block;max-width:100%;text-align:center;line-height:1.25;overflow-wrap:break-word;text-wrap:balance}
+@media(max-width:390px){.rt-shooters-stats>div{min-height:96px}.rt-shooters-stats span{font-size:10px}}
