@@ -174,8 +174,8 @@ function setAreaScore(id,attempt,tableId,areaId,value,input){
 }
 function setTimeResult(id,attempt,tableId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const key=attempt==='initial'?'initialTimes':'refireTimes';if(!p[key])p[key]={};p[key][tableId]=value;save();refreshLive()}
 
-const makeShooter=(name,lane,rounds,buttNumber="")=>({buttNumber,grade:'',dodId:'',organization:'',weaponSerial:'',id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false,remedialTables:{}});
-const makeSession=()=>({date:new Date().toLocaleDateString('en-CA'),authenticatingOfficial:'',defaultRounds:0,selected:'',shooters:[],view:'roster'});
+const makeShooter=(name,lane,rounds)=>({grade:'',organization:'',id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false,remedialTables:{}});
+const makeSession=()=>({date:new Date().toLocaleDateString('en-CA'),defaultRounds:0,selected:'',shooters:[],view:'roster'});
 const isCustom=c=>c==='Sustainment';
 function phaseNames(){return current()?.template?.phases?.map(p=>p.id)||phases().map(p=>p.id)};
 function phaseTitle(id){return (current()?.template?.phases||phases()).find(p=>p.id===id)?.name||id};
