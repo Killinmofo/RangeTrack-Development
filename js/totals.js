@@ -37,16 +37,20 @@ function totals(){
   </section>
   <section class="rt-summary-shell rt-summary-report">
    <div class="rt-summary-heading"><div><small class="rt-eyebrow">DETAILED BREAKDOWN</small><h3>Qualification Results</h3></div></div>
-   <div class="rt-summary-detail-columns"><span>SHOOTER / LANE</span><span>TOTAL SCORE</span><span>PASS / FAIL</span></div>
+   <div class="rt-summary-detail-scroll" role="region" aria-label="Scrollable qualification details" tabindex="0">
+   <div class="rt-summary-detail-columns"><span>SHOOTER / LANE</span><span>BUTT #</span><span>WEAPON SERIAL</span><span>TOTAL SCORE</span><span>PASS / FAIL</span></div>
    <div class="rt-summary-detail-rows">
     ${[...s.shooters].sort((a,b)=>(Number(a.lane)||999)-(Number(b.lane)||999)||a.name.localeCompare(b.name)).map(p=>{
       const result=reportResult(overallStatus(p)),score=effectivePaperTotal(p);
       return `<div class="rt-summary-detail-row">
        <div class="rt-summary-detail-shooter"><strong title="${safe(p.name)}">${safe(p.name)}</strong><small>LANE ${safe(p.lane||'—')}</small></div>
+       <span class="rt-summary-detail-equipment" title="${safe(p.buttNumber||'Not entered')}">${safe(p.buttNumber||'—')}</span>
+       <span class="rt-summary-detail-equipment rt-summary-detail-serial" title="${safe(p.weaponSerial||'Not entered')}">${safe(p.weaponSerial||'—')}</span>
        <strong class="rt-summary-detail-score">${score===''?'—':safe(score)}</strong>
        <span class="rt-summary-detail-result rt-summary-${statusStyle(result)}">${result}</span>
       </div>`;
     }).join('')||'<p class="rt-summary-empty">No shooters added to this class yet.</p>'}
+   </div>
    </div>
   </section>
   <section class="rt-summary-shell rt-summary-actions">
