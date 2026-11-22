@@ -83,10 +83,10 @@ function roster(){
    </header>
    <div class="rt-shooters-body">
     <div class="rt-shooters-stats">
-     <div class="rt-stat-total"><strong>${shooters.length}</strong><span>Total Shooters</span></div>
-     <div class="rt-stat-assigned"><strong>${assigned}</strong><span>Lane Assigned</span></div>
-     <div class="rt-stat-unassigned"><strong>${shooters.length-assigned}</strong><span>No Lane Assigned</span></div>
-     <div class="rt-stat-incomplete"><strong>${incomplete}</strong><span>Missing Personnel Info</span></div>
+     <div class="rt-stat-total"><strong>${shooters.length}</strong><span>Total</span></div>
+     <div class="rt-stat-assigned"><strong>${assigned}</strong><span>Assigned</span></div>
+     <div class="rt-stat-unassigned"><strong>${shooters.length-assigned}</strong><span>No Lane</span></div>
+     <div class="rt-stat-incomplete"><strong>${incomplete}</strong><span title="Missing personnel information">Personnel</span></div>
     </div>
     <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
     <div class="rt-roster-table" role="group" aria-label="Class shooter roster">
