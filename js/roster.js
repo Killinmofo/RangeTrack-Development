@@ -1,24 +1,124 @@
 'use strict';
+let rtRosterQuery='';
+function rtRosterIcon(type){
+ const shapes={
+ users:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20v-2a6 6 0 0 1 12 0v2H2zM15 15a5 5 0 0 1 7 5h-6"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/>',
+ chevron:'<path d="m9 5 7 7-7 7"/>',
+ plus:'<path d="M12 4v16M4 12h16"/>',
+ edit:'<path d="m4 20 4-.8L19 8.2l-4.2-4.2L4 14.9V20zM13 6l4 4"/>',
+ more:'<circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>',
+ score:'<circle cx="12" cy="12" r="8"/><path d="M12 1v7m0 8v7M1 12h7m8 0h7"/>',
+ courses:'<path d="M3 5h7l4 3 7-3v14l-7 3-4-3-7 1zM10 5v14M14 8v14"/>',
+ report:'<path d="M6 2h8l5 5v15H6zM14 2v5h5M9 12h7M9 16h7"/>'
+ };
+ return '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(shapes[type]||'')+'</svg>';
+}
+function rtRosterSort(mode){
+ const s=current();if(!s)return;
+ s.rosterSort=mode==='name'?'name':'lane';save();render();
+}
+function rtSelectRosterShooter(id){
+ const s=current();if(!s)return;
+ s.selected=id;save();
+ document.querySelectorAll('.rt-shooter-row').forEach(el=>{
+  const active=el.dataset.shooterId===id;
+  el.classList.toggle('selected',active);
+  el.setAttribute('aria-pressed',String(active));
+ });
+ const edit=document.getElementById('rt-roster-edit');if(edit)edit.disabled=false;
+}
+function rtFilterRoster(value){
+ rtRosterQuery=String(value||'');
+ const needle=rtRosterQuery.trim().toLocaleLowerCase();
+ let shown=0;
+ document.querySelectorAll('.rt-shooter-row').forEach(el=>{
+  const match=!needle||el.dataset.search.includes(needle);
+  el.hidden=!match;if(match)shown++;
+ });
+ const status=document.getElementById('rt-roster-search-status');
+ if(status)status.textContent=needle?(shown+' matching '+(shown===1?'shooter':'shooters')):'';
+}
+function rtClearRoster(){
+ const s=current();if(!s||!s.shooters.length)return;
+ if(!window.confirm('Clear all '+s.shooters.length+' shooters from this class? This permanently removes their saved scores and personnel details from this class.'))return;
+ s.shooters=[];s.selected='';save();rtRosterQuery='';render();
+}
+function rtRosterEdit(){
+ const s=current();if(!s)return;
+ if(!s.selected||!s.shooters.some(p=>p.id===s.selected)){
+  window.alert('Select a shooter from the roster first.');
+  return;
+ }
+ openScoreShooterModal('edit');
+}
+function rtRosterMoreToggle(){
+ const menu=document.getElementById('rt-roster-menu');
+ if(menu)menu.hidden=!menu.hidden;
+}
 function roster(){
- const session=current(),rifle=rifleForCard();
- const editor=p=>`<details class="card-shooter-editor"><summary>Edit DAF 629 details</summary><div class="grid">
- <label>Name<input value="${safe(p.name)}" onchange="updateShooterCardField('${p.id}','name',this.value)"></label>
- <label>Grade<input value="${safe(p.grade||'')}" onchange="updateShooterCardField('${p.id}','grade',this.value)"></label>
- <label>DoD ID (optional)<input inputmode="numeric" value="${safe(p.dodId||'')}" onchange="updateShooterCardField('${p.id}','dodId',this.value)"></label>
- <label>Organization<input value="${safe(p.organization||'')}" onchange="updateShooterCardField('${p.id}','organization',this.value)"></label>
- <label>Weapon serial # (optional)<input value="${safe(p.weaponSerial||'')}" onchange="updateShooterCardField('${p.id}','weaponSerial',this.value)"></label>
- ${rifle?`<label>Rifle Butt #<input value="${safe(p.buttNumber||'')}" onchange="updateShooterCardField('${p.id}','buttNumber',this.value)"></label>`:''}
- </div></details>`;
- return `<section class="panel"><div class="row between"><h2>${safe(db.weapon)} · ${safe(session.template?.name||db.course)}</h2><span class="tag">CLASS ROSTER</span></div>
- <div class="grid"><label>Class / qualification date<input type="date" value="${safe(session.date)}" onchange="updateSession('date',this.value)"></label><label>Authenticating Official<input value="${safe(session.authenticatingOfficial||'')}" onchange="updateSession('authenticatingOfficial',this.value)" placeholder="Name and grade"></label>
- <label>Default initial rounds<input type="number" min="0" value="${session.defaultRounds}" onchange="updateSession('defaultRounds',this.value)"></label></div><p><button onclick="applyRounds()">Apply rounds to all</button></p>
- <p class="muted">All DAF 629 draft cards in this class use this authenticating official and qualification date.</p></section>
- <section class="panel"><h2>Class Shooters (${session.shooters.length})</h2>
- ${session.shooters.map(p=>`<div class="entry"><div class="row between"><div><strong>${safe(p.name)}</strong><div class="muted">${safe(p.grade||'Grade missing')} · Lane ${safe(p.lane||'—')} · ${progress(p)}/${tableList().length} tables</div></div><div class="row"><button class="primary" onclick="openShooter('${p.id}')">Score</button><button class="danger" onclick="removeShooter('${p.id}')" aria-label="Remove shooter">×</button></div></div>${editor(p)}</div>`).join('')||'<p class="muted">No shooters added yet.</p>'}
- <h3>Add Shooter</h3><div class="grid"><label>Full name *<input id="newName" autocomplete="off" placeholder="Last, First"></label><label>Grade *<input id="newGrade" placeholder="SSgt"></label><label>Organization *<input id="newOrganization" placeholder="Unit"></label><label>DoD ID (optional)<input id="newDodId" inputmode="numeric" autocomplete="off" placeholder="Optional"></label><label>Lane<input id="newLane" type="number" min="1" placeholder="Lane"></label>
- <label>Weapon serial # (optional)<input id="newWeaponSerial" autocomplete="off" placeholder="Optional assignment"></label>
- ${rifle?'<label>Rifle Butt # (optional)<input id="newButtNumber" autocomplete="off" placeholder="Butt number"></label>':'<input id="newButtNumber" type="hidden" value="">'}
- </div><p><button class="primary" onclick="addShooter()">Add Shooter</button></p></section>`;
+ const s=current();
+ if(!s)return '<section class="panel">No active class.</section>';
+ const shooters=s.shooters||[];
+ const ordered=[...shooters].sort((a,b)=>s.rosterSort==='name'
+  ?a.name.localeCompare(b.name)
+  :(Number(a.lane)>0?Number(a.lane):Number.MAX_SAFE_INTEGER)-(Number(b.lane)>0?Number(b.lane):Number.MAX_SAFE_INTEGER)||a.name.localeCompare(b.name));
+ const assigned=shooters.filter(p=>Number(p.lane)>0).length;
+ const incomplete=shooters.filter(p=>!p.name?.trim()||!p.grade?.trim()||!p.organization?.trim()).length;
+ const rifle=rifleForCard();
+ const action=(icon,label,fn,active=false)=>'<button type="button" class="'+(active?'active':'')+'" onclick="'+fn+'">'+rtRosterIcon(icon)+'<span>'+label+'</span></button>';
+ return `<div class="rt-shooters-view">
+  <nav class="rt-roster-tabs" aria-label="RangeTrack navigation">
+    ${action('users','Shooters',"tab('roster')",true)}
+    ${action('score','Scoring',"tab('score')")}
+    ${action('courses','Courses',"tab('editor')")}
+    ${action('report','Reports',"tab('totals')")}
+  </nav>
+  <section class="rt-shooters-card">
+   <header class="rt-shooters-card-head">
+    <div class="rt-roster-heading">${rtRosterIcon('users')}<h2>Shooters</h2></div>
+    <span class="rt-roster-count">${shooters.length} ${shooters.length===1?'Shooter':'Shooters'}</span>
+   </header>
+   <div class="rt-shooters-body">
+    <div class="rt-shooters-stats">
+     <div class="rt-stat-total"><strong>${shooters.length}</strong><span>Total</span></div>
+     <div class="rt-stat-assigned"><strong>${assigned}</strong><span>Assigned</span></div>
+     <div class="rt-stat-unassigned"><strong>${shooters.length-assigned}</strong><span>Unassigned</span></div>
+     <div class="rt-stat-incomplete"><strong>${incomplete}</strong><span>Incomplete</span></div>
+    </div>
+    <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
+    <div class="rt-roster-table" role="group" aria-label="Class shooter roster">
+     <div class="rt-roster-columns"><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span><span></span></div>
+     ${ordered.map((p,i)=>`<button type="button" class="rt-shooter-row ${s.selected===p.id?'selected':''}" data-shooter-id="${safe(p.id)}" data-search="${safe((p.name+' '+p.grade+' '+p.organization+' '+p.lane).toLocaleLowerCase())}" aria-pressed="${s.selected===p.id?'true':'false'}" onclick="rtSelectRosterShooter('${p.id}')">
+       <span class="rt-roster-number">${i+1}</span><strong class="rt-shooter-name">${safe(shortScoreName(p.name))}</strong><span class="rt-lane-value">${p.lane?'<b>'+safe(p.lane)+'</b>':'—'}</span><span class="rt-ammo-value">${safe(Number(p.initial)||0)}</span><span class="rt-roster-chevron">${rtRosterIcon('chevron')}</span>
+      </button>`).join('')||'<p class="rt-roster-empty">No shooters added yet. Tap Add Shooter below to get started.</p>'}
+    </div>
+    <p id="rt-roster-search-status" class="rt-search-status" aria-live="polite"></p>
+    <details class="rt-class-settings">
+     <summary>Class settings</summary>
+     <div class="rt-class-settings-fields">
+      <label>Class / qualification date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label>
+      <label>Authenticating Official<input value="${safe(s.authenticatingOfficial||'')}" onchange="updateSession('authenticatingOfficial',this.value)" placeholder="Name and grade"></label>
+      <label>Default initial rounds<input type="number" min="0" value="${safe(s.defaultRounds||0)}" onchange="updateSession('defaultRounds',this.value)"></label>
+     </div>
+     <button type="button" onclick="applyRounds()">Apply rounds to all shooters</button>
+     <p class="muted">The qualification date and authenticating official are used on draft DAF 629 cards. ${rifle?'Rifle butt numbers can be edited in shooter details.':''}</p>
+    </details>
+   </div>
+  </section>
+  <div id="rt-modal-root"></div>
+ </div>
+ <div class="rt-roster-more-menu" id="rt-roster-menu" hidden role="group" aria-label="More shooter options">
+  <strong>Roster options</strong>
+  <button type="button" onclick="rtRosterSort('lane')">Sort by lane ${s.rosterSort!=='name'?'✓':''}</button>
+  <button type="button" onclick="rtRosterSort('name')">Sort by name ${s.rosterSort==='name'?'✓':''}</button>
+  <button type="button" class="rt-clear-roster" onclick="rtClearRoster()" ${shooters.length?'':'disabled'}>Clear Roster</button>
+ </div>
+ <nav class="rt-roster-footer" aria-label="Shooter management">
+  <button type="button" class="rt-add-shooter" onclick="openScoreShooterModal('add')">${rtRosterIcon('plus')}<span>Add Shooter</span></button>
+  <button type="button" id="rt-roster-edit" onclick="rtRosterEdit()" ${shooters.length?'':'disabled'}>${rtRosterIcon('edit')}<span>Edit</span></button>
+  <button type="button" class="rt-more-shooters" onclick="rtRosterMoreToggle()" aria-controls="rt-roster-menu">${rtRosterIcon('more')}<span>More</span></button>
+ </nav>`;
 }
 function phaseCell(p,attempt,phase){const obj=(attempt==='initial'?p.initialScores:p.refireScores)[phase]||blank();return `<td>${['head','body','exterior'].map(k=>`<label class="cellfield"><span>${k==='exterior'?'Exterior':k==='head'?'Head':'Body'}</span><input type="number" min="0" inputmode="numeric" placeholder="—" value="${safe(obj[k])}" oninput="setScore('${p.id}','${attempt}','${phase}','${k}',this.value)"></label>`).join('')}<div class="overall"><strong>Overall</strong><strong id="sum-${attempt}-${phase.replace(' ','')}">${sumPhase(obj)}</strong></div></td>`}
 
