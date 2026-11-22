@@ -130,7 +130,6 @@ body:has(.rt-score-view) .tabs{margin-bottom:10px}
 @media(max-width:650px){
  body:has(.rt-score-view) main{padding:9px 9px 30px}
  body:has(.rt-score-view) .brand-header{padding:13px 12px}
- body:has(.rt-score-view) .brand-text h1{font-size:27px}
  .rt-course-banner{padding:13px}
  .rt-banner-main h2{font-size:22px}
  .rt-banner-main p{font-size:10px}
