@@ -1,5 +1,46 @@
 'use strict';
-function dashboard(){return `<h2 class="dashboard-title">Dashboard</h2><section class="dashboard-section"><button class="dashboard-card" onclick="toggleDashboardSection('weapon')"><span class="dash-icon">◎</span><span class="dash-copy"><strong>Select Weapon System</strong><small>${db.weapon?'Selected: '+safe(db.weapon):'Choose M18, M4A1, or another weapon.'}</small></span><span class="dash-chevron">›</span></button>${dashboardSection==='weapon'?`<div class="panel"><h2>Choose weapon system</h2><div class="weapons">${WEAPONS.map((w,i)=>`<button class="${db.weapon===w?'selected active':''}" onclick="chooseWeapon(WEAPONS[${i}])">${safe(w)}</button>`).join('')}</div></div>`:''}<button class="dashboard-card" onclick="toggleDashboardSection('course')"><span class="dash-icon">⊕</span><span class="dash-copy"><strong>Select Course</strong><small>${selectedCourse()?'Selected: '+safe(selectedCourse().name):'Choose and start a qualification course.'}</small></span><span class="dash-chevron">›</span></button>${dashboardSection==='course'?`<div class="panel"><h2>${db.weapon?safe(db.weapon)+' courses':'Select a weapon first'}</h2>${db.weapon?`<div class="courses">${availableCourses(db.weapon).map(c=>`<button class="${db.course===c.id?'selected active':''}" onclick="chooseCourse('${c.id}')">${safe(c.name)}</button>`).join('')||'<p class="muted">No courses assigned. Use Course Editor to assign one.</p>'}</div>${selectedCourse()?`<div class="dashboard-selection"><p class="muted">${safe(selectedCourse().notes)}</p><button class="primary dashboard-action" onclick="openCourse()">${db.sessions[sessionKey()]?'Continue':'Start'} ${safe(selectedCourse().name)} →</button></div>`:''}`:'<p class="muted">Select a weapon system above to see its courses.</p>'}</div>`:''}<button class="dashboard-card" onclick="tab('active')"><span class="dash-icon">♟</span><span class="dash-copy"><strong>Active Courses</strong><small>Open, manage, or delete saved classes (${Object.keys(db.sessions).length}).</small></span><span class="dash-chevron">›</span></button><button class="dashboard-card" onclick="tab('editor')"><span class="dash-icon">⚙</span><span class="dash-copy"><strong>Course Editor</strong><small>Create and manage reusable course templates.</small></span><span class="dash-chevron">›</span></button><button class="dashboard-card" onclick="tab('weapons')"><span class="dash-icon">✎</span><span class="dash-copy"><strong>Manage Weapon Systems</strong><small>Add or remove weapons available at this location.</small></span><span class="dash-chevron">›</span></button></section>`}
+function dashboard(){
+ const activeCount=Object.keys(db.sessions).length;
+ const selected=selectedCourse();
+ const weaponOpen=dashboardSection==='weapon',courseOpen=dashboardSection==='course';
+ return `<div class="rt-dashboard-view">
+  <section class="rt-dashboard-hero">
+   <div class="rt-dashboard-hero-top"><span class="rt-eyebrow">RANGETRACK · CLASS OPERATIONS</span><span class="rt-dashboard-live"><i></i>READY</span></div>
+   <h2>Range <span>Dashboard</span></h2>
+   <p>Manage weapons, qualification courses, and active training sessions from one place.</p>
+   <div class="rt-dashboard-hero-foot"><span>QUALIFICATION SYSTEM</span><strong>${activeCount} ACTIVE ${activeCount===1?'CLASS':'CLASSES'}</strong></div>
+  </section>
+  <section class="rt-dashboard-stats" aria-label="Training overview">
+   <div><strong>${activeCount}</strong><small>ACTIVE CLASSES</small></div>
+   <div><strong>${WEAPONS.length}</strong><small>WEAPON SYSTEMS</small></div>
+   <div><strong>${db.courses.length}</strong><small>COURSE TEMPLATES</small></div>
+  </section>
+  <section class="rt-dashboard-shell">
+   <header class="rt-dashboard-section-heading"><span class="rt-eyebrow">01 / CLASS SETUP</span><h3>Start or Continue Training</h3></header>
+   <button type="button" class="rt-dashboard-card ${weaponOpen?'rt-dashboard-card-open':''}" onclick="toggleDashboardSection('weapon')" aria-expanded="${weaponOpen}">
+    <span class="rt-dashboard-card-icon">◎</span><span class="rt-dashboard-card-copy"><strong>Select Weapon System</strong><small>${db.weapon?'Selected: '+safe(db.weapon):'Choose the weapon being used for qualification'}</small></span><span class="rt-dashboard-card-chevron">${weaponOpen?'⌄':'›'}</span>
+   </button>
+   ${weaponOpen?`<div class="rt-dashboard-expand">
+     <h4>Weapon Systems</h4>
+     <div class="rt-dashboard-choices">${WEAPONS.map((w,i)=>`<button type="button" class="${db.weapon===w?'rt-dashboard-selected':''}" onclick="chooseWeapon(WEAPONS[${i}])">${safe(w)}</button>`).join('')||'<p class="rt-dashboard-help">No weapon systems configured.</p>'}</div>
+    </div>`:''}
+   <button type="button" class="rt-dashboard-card ${courseOpen?'rt-dashboard-card-open':''}" onclick="toggleDashboardSection('course')" aria-expanded="${courseOpen}">
+    <span class="rt-dashboard-card-icon">▤</span><span class="rt-dashboard-card-copy"><strong>Select Course</strong><small>${selected?'Selected: '+safe(selected.name):'Choose the course and open the class'}</small></span><span class="rt-dashboard-card-chevron">${courseOpen?'⌄':'›'}</span>
+   </button>
+   ${courseOpen?`<div class="rt-dashboard-expand">
+     <h4>${db.weapon?safe(db.weapon)+' Courses':'Select a Weapon First'}</h4>
+     ${db.weapon?`<div class="rt-dashboard-choices rt-dashboard-course-choices">${availableCourses(db.weapon).map(c=>`<button type="button" class="${db.course===c.id?'rt-dashboard-selected':''}" onclick="chooseCourse('${safe(c.id)}')">${safe(c.name)}</button>`).join('')||'<p class="rt-dashboard-help">No courses assigned. Use Course Editor to assign one.</p>'}</div>
+     ${selected?`<div class="rt-dashboard-selection"><p>${safe(selected.notes||'Ready to begin qualification.')}</p><button type="button" class="rt-dashboard-start" onclick="openCourse()">${db.sessions[sessionKey()]?'Continue':'Start'} ${safe(selected.name)} <span>›</span></button></div>`:''}`:'<p class="rt-dashboard-help">Select a weapon system above to see its available courses.</p>'}
+    </div>`:''}
+  </section>
+  <section class="rt-dashboard-shell">
+   <header class="rt-dashboard-section-heading"><span class="rt-eyebrow">02 / CLASS MANAGEMENT</span><h3>Manage Training</h3></header>
+   <button type="button" class="rt-dashboard-card" onclick="tab('active')"><span class="rt-dashboard-card-icon">▦</span><span class="rt-dashboard-card-copy"><strong>Active Courses</strong><small>Open and manage saved classes (${activeCount})</small></span><span class="rt-dashboard-card-chevron">›</span></button>
+   <button type="button" class="rt-dashboard-card" onclick="tab('editor')"><span class="rt-dashboard-card-icon">⚙</span><span class="rt-dashboard-card-copy"><strong>Course Editor</strong><small>Create and edit reusable qualification courses</small></span><span class="rt-dashboard-card-chevron">›</span></button>
+   <button type="button" class="rt-dashboard-card" onclick="tab('weapons')"><span class="rt-dashboard-card-icon">✎</span><span class="rt-dashboard-card-copy"><strong>Manage Weapon Systems</strong><small>Add or remove available weapon systems</small></span><span class="rt-dashboard-card-chevron">›</span></button>
+  </section>
+ </div>`;
+}
 let dashboardSection='';
 function toggleDashboardSection(section){dashboardSection=dashboardSection===section?'':section;render()}
 
