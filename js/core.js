@@ -135,7 +135,43 @@ function overallSummary(p){
  const status=overallStatus(p);
  return `<section class="panel" id="overallSummary"><h2>Overall Course Summary</h2><div class="row between"><strong>Total Hits on Paper (All Tables)</strong><strong style="font-size:24px" data-course-paper="initial">${initial===''?'—':initial}</strong></div><div class="row between" style="margin-top:12px"><strong>Overall Status</strong><strong style="font-size:24px" data-course-status>${status}</strong></div><p class="muted">Each failed Table uses its completed refire score in place of its initial score for final status and total hits. Incomplete refires retain the initial failed result.</p></section>`;
 }
-function setAreaScore(id,attempt,tableId,areaId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const dest=attempt==='initial'?p.initialScores:p.refireScores;if(!dest[tableId])dest[tableId]={};dest[tableId][areaId]=value===''?'':n(value);save();if(db.view==='score')refreshScoringTable();else refreshLive()}
+function rtScoreWarning(message){
+ const el=document.getElementById('rt-score-warning');
+ if(!el)return;
+ el.textContent=message;
+ el.hidden=!message;
+}
+function setAreaScore(id,attempt,tableId,areaId,value,input){
+ const session=current(),p=session?.shooters.find(x=>x.id===id);
+ const table=session?.template?.phases?.find(t=>t.id===tableId);
+ const area=table?.areas?.find(a=>a.id===areaId);
+ if(!p||!table||!area||area.mode==='sum')return false;
+ const dest=attempt==='initial'?p.initialScores:p.refireScores;
+ const scores=dest[tableId]||(dest[tableId]={});
+ const old=scores[areaId]??'';
+ const raw=String(value).trim();
+ const restore=message=>{
+  if(input)input.value=old;
+  rtScoreWarning(message);
+  return false;
+ };
+ if(raw!==''&&!/^[0-9]+$/.test(raw))return restore('Enter a whole-number score (0 or higher).');
+ const next=raw===''?'':Number(raw);
+ if(next!==''&&!Number.isSafeInteger(next))return restore('Enter a valid whole-number score.');
+ const limit=Number(table.rounds);
+ if(table.rounds!==''&&table.rounds!=null&&Number.isFinite(limit)&&limit>0){
+  const others=table.areas.filter(a=>a.mode!=='sum'&&a.id!==areaId)
+   .reduce((total,a)=>total+(Number(scores[a.id])||0),0);
+  if(others+(next===''?0:next)>limit){
+   return restore('Maximum '+limit+' rounds for '+table.name+'. Other scoring areas total '+others+'; this field can be no more than '+Math.max(0,limit-others)+'.');
+  }
+ }
+ scores[areaId]=next;
+ rtScoreWarning('');
+ save();
+ if(db.view==='score')refreshScoringTable();else refreshLive();
+ return true;
+}
 function setTimeResult(id,attempt,tableId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const key=attempt==='initial'?'initialTimes':'refireTimes';if(!p[key])p[key]={};p[key][tableId]=value;save();refreshLive()}
 
 const makeShooter=(name,lane,rounds,buttNumber="")=>({buttNumber,grade:'',dodId:'',organization:'',weaponSerial:'',id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false,remedialTables:{}});
