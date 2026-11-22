@@ -387,3 +387,6 @@ body.rt-scoring-keyboard .rt-sticky-footer{padding-bottom:6px}
  .rt-sticky-footer>button{min-width:0!important;flex:1 1 0!important;padding:8px 3px!important;font-size:11px!important}
  .rt-sticky-footer>button small{font-size:10px!important;white-space:nowrap}
 }
+
+/* In-place validation feedback for round limits, above the score grid. */
+.rt-score-warning:not([hidden]){display:block;margin:10px 0;padding:10px 12px;background:#402a22;border:1px solid #ce8c5d;border-radius:8px;color:#ffe2c4;font-size:13px;font-weight:650}
