@@ -89,9 +89,9 @@ function roster(){
     </div>
     <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
     <div class="rt-roster-table" role="group" aria-label="Class shooter roster">
-     <div class="rt-roster-columns"><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span><span></span></div>
+     <div class="rt-roster-columns"><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span></div>
      ${ordered.map((p,i)=>`<button type="button" class="rt-shooter-row ${s.selected===p.id?'selected':''}" data-shooter-id="${safe(p.id)}" data-search="${safe((p.name+' '+p.grade+' '+p.organization+' '+p.lane).toLocaleLowerCase())}" aria-pressed="${s.selected===p.id?'true':'false'}" onclick="rtSelectRosterShooter('${p.id}')">
-       <span class="rt-roster-number">${i+1}</span><strong class="rt-shooter-name">${safe(shortScoreName(p.name))}</strong><span class="rt-lane-value">${p.lane?'<b>'+safe(p.lane)+'</b>':'—'}</span><span class="rt-ammo-value">${safe(Number(p.initial)||0)}</span><span class="rt-roster-chevron">${rtRosterIcon('chevron')}</span>
+       <span class="rt-roster-number">${i+1}</span><strong class="rt-shooter-name">${safe(shortScoreName(p.name))}</strong><span class="rt-lane-value">${p.lane?'<b>'+safe(p.lane)+'</b>':'—'}</span><span class="rt-ammo-value">${safe(Number(p.initial)||0)}</span>
       </button>`).join('')||'<p class="rt-roster-empty">No shooters added yet. Tap Add Shooter below to get started.</p>'}
     </div>
     <p id="rt-roster-search-status" class="rt-search-status" aria-live="polite"></p>
