@@ -13,10 +13,17 @@ body:has(.rt-dashboard-view) .brand-header{background:linear-gradient(115deg,#12
 .rt-dashboard-hero p{color:#bac8c5;font-size:12px;line-height:1.5;margin:5px 0 17px;max-width:490px}
 .rt-dashboard-hero-foot{border-top:1px solid #41554c;padding-top:12px;color:#b8cbbf;font-size:10px;font-weight:800;letter-spacing:.05em}
 .rt-dashboard-hero-foot strong{font-size:10px;color:#d2ebc1;background:#253927;border:1px solid #7ba764;border-radius:6px;padding:7px 9px;text-align:right}
-.rt-dashboard-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.rt-dashboard-stats>div{background:linear-gradient(180deg,#202d30,#141e24);border:1px solid #3b4c4f;border-radius:11px;box-shadow:0 4px 10px #0003;text-align:center;padding:12px 5px;min-width:0}
-.rt-dashboard-stats strong{display:block;color:#f2f6f3;font-size:26px;font-weight:900;line-height:1.12;font-variant-numeric:tabular-nums}
-.rt-dashboard-stats small{display:block;margin-top:5px;color:#bdc7c3;font-size:9px;font-weight:900;letter-spacing:.025em;overflow-wrap:anywhere}
+.rt-dashboard-active-overview{display:grid;grid-template-columns:112px minmax(0,1fr);gap:0;overflow:hidden;background:linear-gradient(180deg,#202d30,#141e24);border:1px solid #3b4c4f;border-radius:11px;box-shadow:0 4px 10px #0003}
+.rt-dashboard-active-count{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:14px 8px;border-right:1px solid #3b4c4f;min-width:0}
+.rt-dashboard-active-count strong{color:#a3ed76;font-size:32px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.rt-dashboard-active-count small{font-size:9px;color:#bdc7c3;font-weight:900;letter-spacing:.035em;text-align:center}
+.rt-dashboard-active-courses{padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:5px}
+.rt-dashboard-active-courses>span{font-size:9px;color:#bdc7c3;font-weight:900;letter-spacing:.07em}
+.rt-dashboard-active-courses>p{margin:5px 0 0;color:#9eb5a9;font-size:12px}
+.rt-dashboard-active-course{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;min-width:0;padding:4px 0}
+.rt-dashboard-active-course+.rt-dashboard-active-course{border-top:1px solid #34434b;padding-top:8px}
+.rt-dashboard-active-course strong{color:#f2f6f3;font-size:13px;font-weight:850;overflow-wrap:anywhere}
+.rt-dashboard-active-course small{color:#a7d88e;font-size:10px;font-weight:750}
 .rt-dashboard-shell{border:1px solid #40514c;border-radius:14px;overflow:hidden;background:#141d23;box-shadow:0 10px 28px #0005;min-width:0}
 .rt-dashboard-section-heading{background:linear-gradient(90deg,#1d2c29,#202a30);border-bottom:1px solid #46574e;padding:14px}
 .rt-dashboard-section-heading h3{color:#f3f8f2;font-size:19px;line-height:1.25;letter-spacing:-.02em;margin:5px 0 0}
@@ -45,8 +52,10 @@ body:has(.rt-dashboard-view) .brand-header{background:linear-gradient(115deg,#12
 .rt-dashboard-start span{font-size:23px}
 .rt-dashboard-help{color:#bac9c4;font-size:12px;line-height:1.5}
 @media(max-width:600px){
- .rt-dashboard-stats{gap:5px}.rt-dashboard-stats>div{padding:11px 2px}
- .rt-dashboard-stats strong{font-size:22px}.rt-dashboard-stats small{font-size:8px}
+ .rt-dashboard-active-overview{grid-template-columns:92px minmax(0,1fr)}
+ .rt-dashboard-active-count strong{font-size:28px}
+ .rt-dashboard-active-courses{padding:11px 10px}
+ .rt-dashboard-active-course strong{font-size:12px}
  .rt-dashboard-hero{padding:13px}.rt-dashboard-hero h2{font-size:24px}
  .rt-dashboard-card{padding:14px 11px;gap:10px;min-height:72px}
  .rt-dashboard-card-icon{flex-basis:35px;width:35px;height:35px;font-size:21px}
