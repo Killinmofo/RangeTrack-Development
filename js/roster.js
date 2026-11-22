@@ -58,6 +58,7 @@ function refreshScoringTable(){
   const icon=button.querySelector('.rt-footer-icon');
   if(icon)icon.innerHTML='↻'+(pending?'<b class="rt-remedial-count">'+pending+'</b>':'');
  }
+ if(typeof rtUpdateNextScoreButton==='function')rtUpdateNextScoreButton();
 }
 
 const refireOpenIds=new Set();
