@@ -30,24 +30,35 @@ function rtFocusScore(el){
 }
 function rtUpdateNextScoreButton(){
  const btn=document.querySelector('.rt-next-btn');if(!btn)return;
- const inputs=rtFields(),incomplete=inputs.some(el=>el.value==='');
- const last=scoreTableIndex>=tableList().length-1;
- btn.disabled=!inputs.length||(!incomplete&&last);
+ const fields=rtFields();
+ const lastIndex=fields.length-1;
+ const index=fields.findIndex(el=>rtFieldKey(el)===rtLastField);
+ const atEnd=index===lastIndex;
+ const complete=fields.length>0&&fields.every(el=>el.value!=='');
+ const finalTable=scoreTableIndex>=tableList().length-1;
+ const canAdvance=atEnd&&complete&&!finalTable;
+ btn.disabled=!fields.length||(atEnd&&complete&&finalTable);
  const label=btn.querySelector('small');
- if(label)label.textContent=incomplete?'Next Field':last?'Complete':'Next Table';
- btn.setAttribute('aria-label',incomplete?'Go to next empty scoring field':last?'Scoring complete':'Go to next table');
+ if(label)label.textContent=canAdvance?'Next Table':(atEnd&&complete&&finalTable?'Complete':'Next Field');
+ btn.setAttribute('aria-label',canAdvance?'Go to next firing table':atEnd&&complete&&finalTable?'Scoring complete':'Go to next scoring field');
 }
 function rtNextScoreField(){
- const inputs=rtFields(),empties=inputs.filter(el=>el.value==='');
- if(empties.length){
-  const idx=inputs.findIndex(el=>rtFieldKey(el)===rtLastField);
-  const next=inputs.slice(Math.max(0,idx+1)).find(el=>el.value==='')||empties[0];
-  rtFocusScore(next);
- }else if(scoreTableIndex<tableList().length-1){
+ const fields=rtFields();if(!fields.length)return;
+ const index=fields.findIndex(el=>rtFieldKey(el)===rtLastField);
+ const lastIndex=fields.length-1;
+ if(index<lastIndex){
+  // Follow the displayed scoring order, including fields that already have scores.
+  rtFocusScore(fields[index+1]);
+ }else if(fields.every(el=>el.value!=='')&&scoreTableIndex<tableList().length-1){
   rtLastField='';
   changeScoringTable(1);
-  rtUpdateNextScoreButton();
+ }else if(index===lastIndex){
+  // Keep the current table until all fields have been entered.
+  rtFocusScore(fields[0]);
+ }else{
+  rtFocusScore(fields[0]);
  }
+ rtUpdateNextScoreButton();
 }
 document.addEventListener('focusin',e=>{
  if(!e.target.matches?.('.rt-score-input'))return;
