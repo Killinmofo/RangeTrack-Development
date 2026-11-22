@@ -3,10 +3,7 @@ function openCourse(){
  if(!db.weapon||!selectedCourse())return;
  const key=sessionKey();
  if(!db.sessions[key]){
-  const official=document.getElementById('newAuthenticatingOfficial')?.value.trim()||'';
-  if(!official){alert('Enter the authenticating official before starting the class.');return;}
   db.sessions[key]=makeSession();
-  db.sessions[key].authenticatingOfficial=official;
   db.sessions[key].template=JSON.parse(JSON.stringify(selectedCourse()));
   db.sessions[key].defaultRounds=selectedCourse().defaultRounds||0;
  }
@@ -16,21 +13,8 @@ function home(){db.view='home';dashboardSection='';save();render()}
 function tab(v){db.view=v;save();render()}
 function chooseWeapon(w){dashboardSection='course';db.weapon=w;db.course='';save();render()}
 function chooseCourse(c){db.course=c;save();render()}
-function addShooter(){
- const session=current(),name=document.getElementById('newName').value.trim();
- const lane=document.getElementById('newLane').value;
- const buttNumber=document.getElementById('newButtNumber')?.value.trim()||'';
- const grade=document.getElementById('newGrade').value.trim();
- const dodId=document.getElementById('newDodId').value.trim();
- const organization=document.getElementById('newOrganization').value.trim();
- const weaponSerial=document.getElementById('newWeaponSerial').value.trim();
- if(!name||!grade||!organization){alert('Name, grade and organization are required. DoD ID and serial number are optional.');return;}
- const p=makeShooter(name,lane===''?'':n(lane),n(session.defaultRounds),buttNumber);
- Object.assign(p,{grade,dodId,organization,weaponSerial});
- session.shooters.push(p);session.selected=p.id;save();render();
-}
 function removeShooter(id){if(!confirm('Remove this shooter and their scores?'))return;const s=current();s.shooters=s.shooters.filter(p=>p.id!==id);if(s.selected===id)s.selected=s.shooters[0]?.id||'';save();render()}
-function editShooter(id,k,v){const p=current().shooters.find(x=>x.id===id);if(!p)return;p[k]=['initial','extra','lane'].includes(k)?n(v):v;save();if(k==='lane'||k==='name'||k==='buttNumber')render();else refreshLive()}
+function editShooter(id,k,v){const p=current().shooters.find(x=>x.id===id);if(!p)return;p[k]=['initial','extra','lane'].includes(k)?n(v):v;save();if(k==='lane'||k==='name')render();else refreshLive()}
 function updateSession(k,v){current()[k]=k==='defaultRounds'?n(v):v;save()}
 function applyRounds(){if(!confirm('Replace the initial ammunition count for all shooters in this course?'))return;const s=current();s.shooters.forEach(p=>p.initial=n(s.defaultRounds));save();render()}
 function openShooter(id){current().selected=id;tab('score')}
