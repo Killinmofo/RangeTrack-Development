@@ -110,5 +110,3 @@ function completeCourse(){
  save();render();
 }
 function resume(key){const i=key.indexOf('|');db.weapon=key.slice(0,i);db.course=key.slice(i+1);openCourse()}
-function rifleForCard(){return /^(M4|M16|M110|AR15)|RIFLE|CARBINE|SDMR|AR-15/i.test(db.weapon||'')}
-function updateShooterCardField(id,field,value){if(!['name','grade','dodId','organization','weaponSerial','buttNumber'].includes(field))return;const p=current()?.shooters.find(x=>x.id===id);if(!p)return;p[field]=value;save()}
