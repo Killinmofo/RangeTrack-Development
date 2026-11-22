@@ -66,14 +66,7 @@ function roster(){
  const assigned=shooters.filter(p=>Number(p.lane)>0).length;
  const incomplete=shooters.filter(p=>!p.name?.trim()||!p.grade?.trim()||!p.organization?.trim()).length;
  const rifle=rifleForCard();
- const action=(icon,label,fn,active=false)=>'<button type="button" class="'+(active?'active':'')+'" onclick="'+fn+'">'+rtRosterIcon(icon)+'<span>'+label+'</span></button>';
  return `<div class="rt-shooters-view">
-  <nav class="rt-roster-tabs" aria-label="RangeTrack navigation">
-    ${action('users','Shooters',"tab('roster')",true)}
-    ${action('score','Scoring',"tab('score')")}
-    ${action('courses','Courses',"tab('editor')")}
-    ${action('report','Reports',"tab('totals')")}
-  </nav>
   <section class="rt-shooters-card">
    <header class="rt-shooters-card-head">
     <div class="rt-roster-heading">${rtRosterIcon('users')}<h2>Shooters</h2></div>
