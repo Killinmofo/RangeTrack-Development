@@ -162,3 +162,33 @@
 .rt-copy-modal .rt-copy-note{color:#b4c6ba;background:#1a292b;border:1px solid #41564b;border-radius:8px;font-size:12px;line-height:1.5;padding:12px;margin:12px 0}
 .rt-copy-modal select{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:46px;background:#111e21;color:#f2f7f3;border:1px solid #56685c;border-radius:8px;margin-top:7px;padding:10px;font-size:14px}
 .rt-copy-modal select:focus-visible{outline:2px solid #8ccf54;outline-offset:2px}
+
+/* Multiple shooter selection for copying profiles to another class. */
+.rt-roster-bulkbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:9px 10px;background:#1c292a;border:1px solid #40584b;border-radius:9px}
+.rt-roster-all-label{display:inline-flex;align-items:center;gap:7px;color:#e5f0e7;font-size:12px;font-weight:850;cursor:pointer}
+.rt-roster-all-label input,.rt-roster-checkbox{appearance:auto;accent-color:#8ccf54;width:18px;height:18px;min-width:18px;min-height:18px;margin:0;cursor:pointer}
+#rt-roster-selected-count{margin-left:auto;color:#bad6c0;font-size:11px;font-weight:850}
+#rt-roster-copy-selected{background:#426b35;border:1px solid #80b265;border-radius:8px;color:#f2f8ed;font-weight:850;font-size:11px;min-height:34px;padding:6px 9px}
+#rt-roster-copy-selected:disabled{opacity:.4}
+.rt-roster-columns{grid-template-columns:24px 27px minmax(70px,1fr) 50px 48px}
+.rt-shooter-row{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:3px;min-width:0}
+.rt-shooter-row.rt-copy-checked{box-shadow:inset 3px 0 #8ccf54}
+.rt-shooter-row .rt-roster-checkbox{justify-self:center}
+.rt-shooter-pick{display:grid;grid-template-columns:27px minmax(70px,1fr) 50px 48px;align-items:center;column-gap:5px;width:100%;min-width:0;min-height:44px;border:0;background:transparent;color:inherit;text-align:left;padding:0;font-size:inherit;border-radius:0}
+.rt-shooter-pick:hover{background:transparent}
+.rt-shooter-pick:focus-visible{outline:2px solid #a5ee7a;outline-offset:-2px}
+.rt-copy-names{max-height:125px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.rt-copy-names span{display:inline-block;background:#263a30;color:#e5f1e5;border:1px solid #557058;border-radius:6px;padding:6px 9px;font-size:11px}
+@media(min-width:750px){
+ .rt-roster-columns{grid-template-columns:30px 40px minmax(160px,1fr) 90px 90px}
+ .rt-shooter-pick{grid-template-columns:40px minmax(160px,1fr) 90px 90px}
+ .rt-shooter-row{grid-template-columns:30px minmax(0,1fr)}
+}
+@media(max-width:390px){
+ .rt-roster-columns{grid-template-columns:19px 19px minmax(70px,1fr) 40px 42px;gap:4px}
+ .rt-shooter-row{grid-template-columns:19px minmax(0,1fr);gap:4px}
+ .rt-shooter-pick{grid-template-columns:19px minmax(70px,1fr) 40px 42px;gap:4px}
+ .rt-roster-checkbox{width:16px;height:16px;min-width:16px;min-height:16px}
+ .rt-roster-bulkbar{gap:7px;padding:8px 7px}
+ #rt-roster-selected-count{font-size:10px}
+}
