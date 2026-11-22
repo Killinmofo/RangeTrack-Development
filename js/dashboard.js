@@ -32,10 +32,10 @@ function dashboard(){
      ${db.weapon?`<div class="rt-dashboard-choices rt-dashboard-course-choices">${availableCourses(db.weapon).map(c=>`<button type="button" class="${db.course===c.id?'rt-dashboard-selected':''}" onclick="chooseCourse('${safe(c.id)}')">${safe(c.name)}</button>`).join('')||'<p class="rt-dashboard-help">No courses assigned. Use Course Editor to assign one.</p>'}</div>
      ${selected?`<div class="rt-dashboard-selection"><p>${safe(selected.notes||'Ready to begin qualification.')}</p><button type="button" class="rt-dashboard-start" onclick="openCourse()">${db.sessions[sessionKey()]?'Continue':'Start'} ${safe(selected.name)} <span>›</span></button></div>`:''}`:'<p class="rt-dashboard-help">Select a weapon system above to see its available courses.</p>'}
     </div>`:''}
+   <button type="button" class="rt-dashboard-card" onclick="tab('active')"><span class="rt-dashboard-card-icon">▦</span><span class="rt-dashboard-card-copy"><strong>Active Courses</strong><small>Open and manage saved classes (${activeCount})</small></span><span class="rt-dashboard-card-chevron">›</span></button>
   </section>
   <section class="rt-dashboard-shell">
-   <header class="rt-dashboard-section-heading"><span class="rt-eyebrow">02 / CLASS MANAGEMENT</span><h3>Manage Training</h3></header>
-   <button type="button" class="rt-dashboard-card" onclick="tab('active')"><span class="rt-dashboard-card-icon">▦</span><span class="rt-dashboard-card-copy"><strong>Active Courses</strong><small>Open and manage saved classes (${activeCount})</small></span><span class="rt-dashboard-card-chevron">›</span></button>
+   <header class="rt-dashboard-section-heading"><span class="rt-eyebrow">02 / COURSE MANAGEMENT</span><h3>Course Management</h3></header>
    <button type="button" class="rt-dashboard-card" onclick="tab('editor')"><span class="rt-dashboard-card-icon">⚙</span><span class="rt-dashboard-card-copy"><strong>Course Editor</strong><small>Create and edit reusable qualification courses</small></span><span class="rt-dashboard-card-chevron">›</span></button>
    <button type="button" class="rt-dashboard-card" onclick="tab('weapons')"><span class="rt-dashboard-card-icon">✎</span><span class="rt-dashboard-card-copy"><strong>Manage Weapon Systems</strong><small>Add or remove available weapon systems</small></span><span class="rt-dashboard-card-chevron">›</span></button>
   </section>
