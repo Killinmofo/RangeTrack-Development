@@ -44,9 +44,11 @@ body:has(.rt-summary-view) .tabs{margin-bottom:10px}
 .rt-summary-incomplete{background:#273137;border-color:#52646b;color:#bec9cc}
 .rt-summary-empty{padding:18px;color:#bac9c4;font-size:13px}
 /* Compact one-line qualification results, matching the scoring matrix. */
+.rt-summary-detail-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .rt-summary-detail-columns,.rt-summary-detail-row{
  display:grid;
- grid-template-columns:minmax(0,1fr) 85px 92px;
+ grid-template-columns:minmax(145px,1.5fr) 72px minmax(126px,1.1fr) 85px 92px;
+ min-width:590px;
  align-items:center;
  gap:9px;
  padding:0 13px;
@@ -65,10 +67,12 @@ body:has(.rt-summary-view) .tabs{margin-bottom:10px}
 .rt-summary-detail-shooter{min-width:0;padding:8px 0}
 .rt-summary-detail-shooter strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f7f3;font-size:12px;font-weight:900}
 .rt-summary-detail-shooter small{display:block;margin-top:4px;color:#9db8a9;font-weight:800;font-size:9px}
+.rt-summary-detail-equipment{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;color:#dce6df;font-size:12px;font-weight:750}
+.rt-summary-detail-serial{font-size:11px}
 .rt-summary-detail-score{text-align:center;color:#f2f7f3;font-variant-numeric:tabular-nums;font-size:16px}
 .rt-summary-detail-result{display:block;text-align:center;padding:7px 2px;border:1px solid #52625a;border-radius:6px;font-size:10px;font-weight:900}
 @media(max-width:600px){
- .rt-summary-detail-columns,.rt-summary-detail-row{grid-template-columns:minmax(0,1fr) 65px 70px;gap:5px;padding-left:8px;padding-right:8px}
+ .rt-summary-detail-columns,.rt-summary-detail-row{grid-template-columns:145px 65px 126px 65px 77px;min-width:518px;gap:6px;padding-left:8px;padding-right:8px}
  .rt-summary-detail-columns{font-size:9px}
  .rt-summary-detail-result{font-size:9px}
 }
