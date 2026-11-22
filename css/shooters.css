@@ -11,7 +11,7 @@
 .rt-roster-heading h2{margin:0;font-size:24px;font-weight:900;line-height:1.1;color:#f5f7f5}
 .rt-roster-count{border:1px solid #a5e76f;color:#b7f17f;padding:5px 9px;border-radius:8px;font-size:12px;font-weight:850;white-space:nowrap}
 .rt-shooters-body{padding:13px}
-.rt-shooters-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:12px}
+.rt-shooters-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:12px}
 .rt-shooters-stats>div{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:78px;gap:2px;border:1px solid #454e52;border-radius:12px;background:linear-gradient(140deg,#2a3134,#1c2529)}
 .rt-shooters-stats strong{font-size:30px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
 .rt-shooters-stats span{font-size:11px;color:#e2e7e5}
