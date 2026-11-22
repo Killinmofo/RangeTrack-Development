@@ -44,6 +44,7 @@ function score(){
   <button type="button" onclick="openScoreShooterModal('add')"><span class="rt-footer-icon">＋</span><small>Add</small></button>
   <button type="button" onclick="openScoreShooterModal('edit')" ${!session.shooters.length?'disabled':''}><span class="rt-footer-icon">✎</span><small>Edit</small></button>
   <button type="button" class="rt-remedial-btn ${pending?'rt-has-pending':''}" onclick="initiateTableRemedials()" ${!pending?'disabled':''}><span class="rt-footer-icon">↻${pending?`<b class="rt-remedial-count">${pending}</b>`:''}</span><small>Remedial</small></button>
+  <button type="button" class="rt-prev-btn" onclick="rtPreviousScoreField()" aria-label="Go to previous scoring field"><span class="rt-footer-icon">←</span><small>Previous</small></button>
   <button type="button" class="rt-next-btn" onclick="rtNextScoreField()"><span class="rt-footer-icon">➜</span><small>Next Field</small></button>
  </nav>`;
 }
