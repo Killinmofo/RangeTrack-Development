@@ -43,7 +43,35 @@ body:has(.rt-summary-view) .tabs{margin-bottom:10px}
 .rt-summary-fail{background:#53262d;border-color:#96515a;color:#ff9698}
 .rt-summary-incomplete{background:#273137;border-color:#52646b;color:#bec9cc}
 .rt-summary-empty{padding:18px;color:#bac9c4;font-size:13px}
-.rt-summary-report .report-preview{border-radius:0;margin:0;padding:12px;background:#fff}
+/* Compact one-line qualification results, matching the scoring matrix. */
+.rt-summary-detail-columns,.rt-summary-detail-row{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 85px 92px;
+ align-items:center;
+ gap:9px;
+ padding:0 13px;
+}
+.rt-summary-detail-columns{
+ min-height:37px;
+ background:#293339;
+ color:#bacdc0;
+ font-size:10px;
+ font-weight:900;
+ letter-spacing:.035em;
+}
+.rt-summary-detail-columns span:nth-child(n+2){text-align:center}
+.rt-summary-detail-row{min-height:57px;border-top:1px solid #34434b;background:#182228}
+.rt-summary-detail-row:nth-child(even){background:#202b30}
+.rt-summary-detail-shooter{min-width:0;padding:8px 0}
+.rt-summary-detail-shooter strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f7f3;font-size:12px;font-weight:900}
+.rt-summary-detail-shooter small{display:block;margin-top:4px;color:#9db8a9;font-weight:800;font-size:9px}
+.rt-summary-detail-score{text-align:center;color:#f2f7f3;font-variant-numeric:tabular-nums;font-size:16px}
+.rt-summary-detail-result{display:block;text-align:center;padding:7px 2px;border:1px solid #52625a;border-radius:6px;font-size:10px;font-weight:900}
+@media(max-width:600px){
+ .rt-summary-detail-columns,.rt-summary-detail-row{grid-template-columns:minmax(0,1fr) 65px 70px;gap:5px;padding-left:8px;padding-right:8px}
+ .rt-summary-detail-columns{font-size:9px}
+ .rt-summary-detail-result{font-size:9px}
+}
 .rt-summary-actions>p{color:#b9c9bf;font-size:12px;line-height:1.55;margin:13px 14px}
 .rt-summary-export-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 14px 14px}
 .rt-summary-export-buttons button{width:100%;min-width:0;min-height:48px;border:1px solid #52645e;border-radius:9px;background:#253530;color:#f0f6ed;font-weight:850;padding:8px}
