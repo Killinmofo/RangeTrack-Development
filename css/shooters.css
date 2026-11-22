@@ -233,3 +233,23 @@
  .rt-roster-selection-actions .rt-roster-context-clear{flex-basis:22px;width:22px;padding:3px}
  .rt-roster-select-hint{font-size:10px}
 }
+
+/* Class Settings directly under the three roster statistics. */
+.rt-shooters-view .rt-class-settings{margin:0 0 12px;padding:0;background:#1b2929;border:1px solid #4a6650;border-radius:11px;overflow:hidden}
+.rt-shooters-view .rt-class-settings summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;padding:13px 14px;min-height:54px;color:#eaf4e9;cursor:pointer}
+.rt-shooters-view .rt-class-settings summary::-webkit-details-marker{display:none}
+.rt-shooters-view .rt-class-settings summary::marker{content:''}
+.rt-class-settings-title{display:flex;align-items:center;gap:10px;min-width:0}
+.rt-class-settings-title>span:last-child{display:flex;flex-direction:column;gap:3px}
+.rt-class-settings-title strong{font-size:13px;font-weight:850;color:#eaf4e9;line-height:1.3}
+.rt-class-settings-title small{font-size:11px;color:#a9bbad;font-weight:550;line-height:1.3}
+.rt-class-settings-icon{font-size:19px;line-height:1;color:#a3ed76}
+.rt-class-settings-chevron{width:8px;height:8px;flex:none;border-right:2px solid #a3ed76;border-bottom:2px solid #a3ed76;transform:rotate(45deg);transition:transform .16s}
+.rt-class-settings[open] .rt-class-settings-chevron{transform:rotate(225deg)}
+.rt-class-settings-content{border-top:1px solid #40564b;padding:14px}
+.rt-shooters-view .rt-class-settings-fields{margin:0 0 13px;gap:12px}
+.rt-shooters-view .rt-class-settings-fields>label{font-size:12px;font-weight:750;color:#c8d8ca;gap:7px}
+.rt-shooters-view .rt-class-settings-fields input{background:#101b20;color:#f2f7f3;border:1px solid #52645d;border-radius:8px;min-height:43px;padding:9px 10px;font-size:16px}
+.rt-shooters-view .rt-class-settings-content>button{width:100%;min-height:43px;border:1px solid #638d4d;border-radius:8px;background:#263c2c;color:#d3f0c4;font-weight:800;font-size:12px;padding:9px}
+.rt-shooters-view .rt-class-settings-content>button:hover{background:#355338}
+.rt-shooters-view .rt-class-settings .muted{font-size:11px;line-height:1.4;color:#a9bbad;margin:10px 0 0}
