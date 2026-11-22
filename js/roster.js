@@ -102,9 +102,9 @@ function rtRosterRemoveSelected(){
  const s=current();if(!s)return;
  const selected=s.shooters.filter(p=>rtRosterCopySelected.has(p.id));
  if(!selected.length){window.alert('Check the shooters you want to remove first.');return;}
- const names=selected.slice(0,8).map(p=>'• '+p.name).join('\\n');
- const overflow=selected.length>8?'\\n...and '+(selected.length-8)+' more.':'';
- const ok=window.confirm('Remove '+selected.length+' selected '+(selected.length===1?'shooter':'shooters')+' from this class?\\n\\n'+names+overflow+'\\n\\nThis permanently deletes their shooter information, scores, and remedial records in this class only. Copies in other classes will not be affected.');
+ const names=selected.slice(0,8).map(p=>'• '+p.name).join('\n');
+ const overflow=selected.length>8?'\n...and '+(selected.length-8)+' more.':'';
+ const ok=window.confirm('Remove '+selected.length+' selected '+(selected.length===1?'shooter':'shooters')+' from this class?\n\n'+names+overflow+'\n\nThis permanently deletes their shooter information, scores, and remedial records in this class only. Copies in other classes will not be affected.');
  if(!ok)return;
  const ids=new Set(selected.map(p=>p.id));
  s.shooters=s.shooters.filter(p=>!ids.has(p.id));
