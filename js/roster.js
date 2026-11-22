@@ -3,6 +3,11 @@ let rtRosterQuery='';
 let rtRosterCopySelected=new Set();
 let rtRosterCopyKey='';
 let rtRosterCopyPending=[];
+function rtRosterClearSelection(){
+ rtRosterCopySync();rtRosterCopySelected.clear();
+ document.querySelectorAll('.rt-shooter-row').forEach(row=>{row.classList.remove('rt-copy-checked');const check=row.querySelector('.rt-roster-checkbox');if(check)check.checked=false;});
+ rtRosterCopyUpdate();
+}
 function rtRosterCopySync(){
  const key=sessionKey(),s=current();
  if(key!==rtRosterCopyKey){rtRosterCopySelected.clear();rtRosterCopyKey=key;}
@@ -30,7 +35,9 @@ function rtRosterCopyUpdate(){
  rtRosterCopySync();
  const count=rtRosterCopySelected.size;
  const label=document.getElementById('rt-roster-selected-count');
- if(label)label.textContent=count+' selected';
+ if(label)label.textContent=String(count);
+ const contextual=document.getElementById('rt-roster-selection-actions');
+ if(contextual)contextual.hidden=count===0;
  const copy=document.getElementById('rt-roster-copy-selected');
  if(copy)copy.disabled=count===0;
  const remove=document.getElementById('rt-roster-remove-selected');
@@ -51,6 +58,9 @@ function rtRosterIcon(type){
  plus:'<path d="M12 4v16M4 12h16"/>',
  edit:'<path d="m4 20 4-.8L19 8.2l-4.2-4.2L4 14.9V20zM13 6l4 4"/>',
  more:'<circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
+ trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 10v7M14 10v7"/>',
+ close:'<path d="M5 5l14 14M19 5L5 19"/>',
  score:'<circle cx="12" cy="12" r="8"/><path d="M12 1v7m0 8v7M1 12h7m8 0h7"/>',
  courses:'<path d="M3 5h7l4 3 7-3v14l-7 3-4-3-7 1zM10 5v14M14 8v14"/>',
  report:'<path d="M6 2h8l5 5v15H6zM14 2v5h5M9 12h7M9 16h7"/>'
@@ -204,11 +214,14 @@ function roster(){
     <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
     <div class="rt-roster-bulkbar">
      <label class="rt-roster-all-label"><input id="rt-roster-select-all" type="checkbox" aria-label="Select all visible shooters" onchange="rtRosterSelectAll(this.checked)" ${shooters.length&&shooters.every(p=>rtRosterCopySelected.has(p.id))?'checked':''}><span>Select All</span></label>
-     <span id="rt-roster-selected-count" aria-live="polite">${rtRosterCopySelected.size} selected</span>
-     <div class="rt-roster-bulk-actions">
-      <button type="button" id="rt-roster-copy-selected" onclick="rtRosterCopy(true)" ${rtRosterCopySelected.size?'':'disabled'}>Copy Selected</button>
-      <button type="button" id="rt-roster-remove-selected" onclick="rtRosterRemoveSelected()" ${rtRosterCopySelected.size?'':'disabled'}>Remove Selected</button>
-     </div>
+     <span class="rt-roster-select-hint">Check shooters for bulk actions</span>
+    </div>
+    <div class="rt-roster-selection-actions" id="rt-roster-selection-actions" ${rtRosterCopySelected.size?'':'hidden'} role="group" aria-label="Selected shooter actions">
+     <span class="rt-roster-selected-badge" id="rt-roster-selected-count" aria-live="polite">${rtRosterCopySelected.size}</span>
+     <span class="rt-roster-selected-copy"><strong>Selected</strong><small>Ready for bulk action</small></span>
+     <button type="button" id="rt-roster-copy-selected" class="rt-roster-context-copy" onclick="rtRosterCopy(true)" aria-label="Copy selected shooters to another class" title="Copy selected">${rtRosterIcon('copy')}</button>
+     <button type="button" id="rt-roster-remove-selected" class="rt-roster-context-remove" onclick="rtRosterRemoveSelected()" aria-label="Remove selected shooters from this class" title="Remove selected">${rtRosterIcon('trash')}</button>
+     <button type="button" class="rt-roster-context-clear" onclick="rtRosterClearSelection()" aria-label="Clear shooter selection" title="Clear selection">${rtRosterIcon('close')}</button>
     </div>
     <div class="rt-roster-table" role="group" aria-label="Class shooter roster">
      <div class="rt-roster-columns"><span class="rt-roster-check-space"></span><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span></div>
