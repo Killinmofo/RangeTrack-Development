@@ -1,5 +1,4 @@
 /* RangeTrack approved tactical Shooters interface */
-body:has(.rt-shooters-view) #nav{display:none}
 .rt-shooters-view{color:#eef3ed;padding-bottom:116px}
 .rt-roster-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 14px;border:1px solid #3c4947;border-radius:13px;background:#131b20;overflow:hidden}
 .rt-roster-tabs button{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:0;border-radius:0;background:transparent;color:#bdc4c9;font-size:12px;font-weight:800;padding:10px 2px;min-height:72px}
