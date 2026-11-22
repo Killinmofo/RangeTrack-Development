@@ -1,11 +1,19 @@
 'use strict';
 function openCourse(){
- if(!db.weapon||!selectedCourse())return;
- const key=sessionKey();
- if(!db.sessions[key]){
+ if(!db.weapon)return;
+ const key=sessionKey(),existing=db.sessions[key];
+ if(existing){
+  // Existing classes retain their own course configuration, even if the library template is deleted.
+  if(!existing.template?.phases?.length){
+   alert('This saved class has no course configuration. Its records have not been changed.');
+   return;
+  }
+ }else{
+  const template=selectedCourse();
+  if(!template)return;
   db.sessions[key]=makeSession();
-  db.sessions[key].template=JSON.parse(JSON.stringify(selectedCourse()));
-  db.sessions[key].defaultRounds=selectedCourse().defaultRounds||0;
+  db.sessions[key].template=JSON.parse(JSON.stringify(template));
+  db.sessions[key].defaultRounds=template.defaultRounds||0;
  }
  db.view='roster';save();render();
 }
@@ -27,4 +35,16 @@ function progress(p){return tableList().filter(t=>{
  return t.areas.filter(a=>a.mode!=='sum').every(a=>(rec[a.id]??'')!=='');
 }).length}
 function total(p){return (Number(p.initial)||0)+(Number(p.extra)||0)}
-function clearAll(){const s=current();if(!s)return;const ok=confirm('CLEAR ALL for '+db.weapon+' '+db.course+'?\n\nThis permanently deletes all shooters, lanes, scores, refires and ammunition for this course. Other courses will not be affected.');if(!ok)return;const sure=prompt('Type CLEAR to confirm:');if(sure!=='CLEAR')return;db.sessions[sid(db.weapon,db.course)]=makeSession();db.sessions[sid(db.weapon,db.course)].template=JSON.parse(JSON.stringify(selectedCourse()));db.sessions[sid(db.weapon,db.course)].defaultRounds=selectedCourse()?.defaultRounds||0;db.view='roster';save();render()}
+function clearAll(){
+ const s=current();if(!s)return;
+ const template=s.template||selectedCourse();
+ if(!template){alert('Cannot reset this class because its course configuration is unavailable. No data was changed.');return;}
+ const ok=confirm('CLEAR ALL for '+db.weapon+' '+(template.name||db.course)+'?\\n\\nThis permanently deletes all shooters, lanes, scores, refires and ammunition for this course. Other courses will not be affected.');
+ if(!ok)return;
+ if(prompt('Type CLEAR to confirm:')!=='CLEAR')return;
+ const freshSession=makeSession();
+ freshSession.template=JSON.parse(JSON.stringify(template));
+ freshSession.defaultRounds=template.defaultRounds||0;
+ db.sessions[sessionKey()]=freshSession;
+ db.view='roster';save();render();
+}
