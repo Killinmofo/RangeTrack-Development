@@ -61,6 +61,49 @@ function rtRosterEdit(){
  }
  openScoreShooterModal('edit');
 }
+function rtRosterCopy(){
+ const source=current(),p=source?.shooters.find(item=>item.id===source.selected);
+ if(!p){window.alert('Select a shooter to copy first.');return;}
+ const destinations=Object.entries(db.sessions).filter(([key,session])=>key!==sessionKey()&&session?.template?.phases?.length);
+ if(!destinations.length){window.alert('There are no other active classes to copy this shooter into. Start another class first.');return;}
+ const menu=document.getElementById('rt-roster-menu');if(menu)menu.hidden=true;
+ const root=document.getElementById('rt-modal-root');if(!root)return;
+ root.innerHTML=`<div class="rt-modal-overlay" onclick="rtCloseCopyShooter(event)"><section class="rt-modal rt-copy-modal" role="dialog" aria-modal="true" aria-labelledby="rt-copy-title">
+  <header><div><small>CLASS ROSTER</small><h3 id="rt-copy-title">Copy Shooter to Class</h3></div><button type="button" class="rt-modal-close" onclick="rtCloseCopyShooter()">✕</button></header>
+  <form onsubmit="rtSaveCopyShooter(event)">
+   <p class="rt-copy-person">Shooter: <strong>${safe(p.name)}</strong></p>
+   <label>Destination Active Class<select name="target" required>${destinations.map(([key,s],i)=>`<option value="${i}">${safe(s.template?.name||'Saved Class')} (${safe(key.split('|')[0])})${s.date?' · '+safe(s.date):''}</option>`).join('')}</select></label>
+   <p class="rt-copy-note">Copies the shooter's name, grade/rank, and organization. Lane, butt number, weapon SN, ammunition, scores, and remedials stay specific to each class. The destination uses its default initial rounds.</p>
+   <footer><button type="button" onclick="rtCloseCopyShooter()">Cancel</button><button type="submit" class="primary">Copy Shooter</button></footer>
+  </form></section></div>`;
+ document.body.classList.add('rt-modal-open');
+ root.querySelector('select[name="target"]')?.focus();
+}
+function rtCloseCopyShooter(event){
+ if(event&&event.target!==event.currentTarget)return;
+ const root=document.getElementById('rt-modal-root');if(root)root.innerHTML='';
+ document.body.classList.remove('rt-modal-open');
+}
+function rtSaveCopyShooter(event){
+ event.preventDefault();
+ const source=current(),p=source?.shooters.find(item=>item.id===source.selected);
+ if(!p){window.alert('The selected shooter is no longer available.');rtCloseCopyShooter();return;}
+ const destinations=Object.entries(db.sessions).filter(([key,session])=>key!==sessionKey()&&session?.template?.phases?.length);
+ const selected=Number(new FormData(event.currentTarget).get('target'));
+ if(!Number.isInteger(selected)||selected<0||selected>=destinations.length){window.alert('Choose a valid active class.');return;}
+ const [key,target]=destinations[selected];
+ if(target.shooters.some(item=>String(item.name||'').trim().toLocaleLowerCase()===String(p.name).trim().toLocaleLowerCase())){
+  window.alert('A shooter with this name already exists in the destination class. No duplicate was created.');
+  return;
+ }
+ const copied=makeShooter(p.name,'',n(target.defaultRounds??target.template?.defaultRounds??0));
+ copied.grade=p.grade||'';
+ copied.organization=p.organization||'';
+ target.shooters.push(copied);
+ save();rtCloseCopyShooter();
+ window.alert(p.name+' copied to '+(target.template?.name||'the selected class')+' ('+key.split('|')[0]+'). Open that class from the Dashboard to assign a lane and weapon details.');
+ render();
+}
 function rtRosterMoreToggle(){
  const menu=document.getElementById('rt-roster-menu');
  if(menu)menu.hidden=!menu.hidden;
@@ -111,6 +154,7 @@ function roster(){
   <strong>Roster options</strong>
   <button type="button" onclick="rtRosterSort('lane')">Sort by lane ${s.rosterSort!=='name'?'✓':''}</button>
   <button type="button" onclick="rtRosterSort('name')">Sort by name ${s.rosterSort==='name'?'✓':''}</button>
+  <button type="button" onclick="rtRosterCopy()" ${shooters.length?'':'disabled'}>Copy Shooter to Class</button>
   <button type="button" class="rt-clear-roster" onclick="rtRosterRemove()" ${shooters.length?'':'disabled'}>Remove Shooter</button>
   <button type="button" class="rt-clear-roster" onclick="rtClearRoster()" ${shooters.length?'':'disabled'}>Clear Roster</button>
  </div>
