@@ -33,6 +33,8 @@ function rtRosterCopyUpdate(){
  if(label)label.textContent=count+' selected';
  const copy=document.getElementById('rt-roster-copy-selected');
  if(copy)copy.disabled=count===0;
+ const remove=document.getElementById('rt-roster-remove-selected');
+ if(remove)remove.disabled=count===0;
  const menu=document.getElementById('rt-menu-copy');
  if(menu)menu.textContent=count?'Copy '+count+' Selected to Class':'Copy Shooter to Class';
  const visible=[...document.querySelectorAll('.rt-shooter-row:not([hidden])')];
@@ -94,6 +96,21 @@ function rtRosterRemove(){
  s.selected='';rtRosterCopySelected.delete(p.id);
  save();
  render();
+}
+function rtRosterRemoveSelected(){
+ rtRosterCopySync();
+ const s=current();if(!s)return;
+ const selected=s.shooters.filter(p=>rtRosterCopySelected.has(p.id));
+ if(!selected.length){window.alert('Check the shooters you want to remove first.');return;}
+ const names=selected.slice(0,8).map(p=>'• '+p.name).join('\\n');
+ const overflow=selected.length>8?'\\n...and '+(selected.length-8)+' more.':'';
+ const ok=window.confirm('Remove '+selected.length+' selected '+(selected.length===1?'shooter':'shooters')+' from this class?\\n\\n'+names+overflow+'\\n\\nThis permanently deletes their shooter information, scores, and remedial records in this class only. Copies in other classes will not be affected.');
+ if(!ok)return;
+ const ids=new Set(selected.map(p=>p.id));
+ s.shooters=s.shooters.filter(p=>!ids.has(p.id));
+ if(ids.has(s.selected))s.selected=s.shooters[0]?.id||'';
+ rtRosterCopySelected.clear();
+ save();render();
 }
 function rtRosterEdit(){
  const s=current();if(!s)return;
@@ -188,12 +205,15 @@ function roster(){
     <div class="rt-roster-bulkbar">
      <label class="rt-roster-all-label"><input id="rt-roster-select-all" type="checkbox" aria-label="Select all visible shooters" onchange="rtRosterSelectAll(this.checked)" ${shooters.length&&shooters.every(p=>rtRosterCopySelected.has(p.id))?'checked':''}><span>Select All</span></label>
      <span id="rt-roster-selected-count" aria-live="polite">${rtRosterCopySelected.size} selected</span>
-     <button type="button" id="rt-roster-copy-selected" onclick="rtRosterCopy(true)" ${rtRosterCopySelected.size?'':'disabled'}>Copy Selected</button>
+     <div class="rt-roster-bulk-actions">
+      <button type="button" id="rt-roster-copy-selected" onclick="rtRosterCopy(true)" ${rtRosterCopySelected.size?'':'disabled'}>Copy Selected</button>
+      <button type="button" id="rt-roster-remove-selected" onclick="rtRosterRemoveSelected()" ${rtRosterCopySelected.size?'':'disabled'}>Remove Selected</button>
+     </div>
     </div>
     <div class="rt-roster-table" role="group" aria-label="Class shooter roster">
      <div class="rt-roster-columns"><span class="rt-roster-check-space"></span><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span></div>
      ${ordered.map((p,i)=>`<div class="rt-shooter-row ${s.selected===p.id?'selected':''} ${rtRosterCopySelected.has(p.id)?'rt-copy-checked':''}" data-shooter-id="${safe(p.id)}" data-search="${safe((p.name+' '+p.grade+' '+p.organization+' '+p.lane).toLocaleLowerCase())}">
-       <input type="checkbox" class="rt-roster-checkbox" aria-label="Select ${safe(p.name)} to copy" ${rtRosterCopySelected.has(p.id)?'checked':''} onchange="rtRosterToggleCopy('${p.id}',this.checked)">
+       <input type="checkbox" class="rt-roster-checkbox" aria-label="Select ${safe(p.name)} for bulk actions" ${rtRosterCopySelected.has(p.id)?'checked':''} onchange="rtRosterToggleCopy('${p.id}',this.checked)">
        <button type="button" class="rt-shooter-pick" aria-pressed="${s.selected===p.id?'true':'false'}" onclick="rtSelectRosterShooter('${p.id}')"><span class="rt-roster-number">${i+1}</span><strong class="rt-shooter-name">${safe(shortScoreName(p.name))}</strong><span class="rt-lane-value">${p.lane?'<b>'+safe(p.lane)+'</b>':'—'}</span><span class="rt-ammo-value">${safe(Number(p.initial)||0)}</span></button>
       </div>`).join('')||'<p class="rt-roster-empty">No shooters added yet. Tap Add Shooter below to get started.</p>'}
     </div>
@@ -216,6 +236,7 @@ function roster(){
   <button type="button" onclick="rtRosterSort('lane')">Sort by lane ${s.rosterSort!=='name'?'✓':''}</button>
   <button type="button" onclick="rtRosterSort('name')">Sort by name ${s.rosterSort==='name'?'✓':''}</button>
   <button type="button" id="rt-menu-copy" onclick="rtRosterCopy()" ${shooters.length?'':'disabled'}>${rtRosterCopySelected.size?'Copy '+rtRosterCopySelected.size+' Selected to Class':'Copy Shooter to Class'}</button>
+  <button type="button" class="rt-clear-roster" onclick="rtRosterRemoveSelected()" ${rtRosterCopySelected.size?'':'disabled'}>Remove Selected</button>
   <button type="button" class="rt-clear-roster" onclick="rtRosterRemove()" ${shooters.length?'':'disabled'}>Remove Shooter</button>
   <button type="button" class="rt-clear-roster" onclick="rtClearRoster()" ${shooters.length?'':'disabled'}>Clear Roster</button>
  </div>
