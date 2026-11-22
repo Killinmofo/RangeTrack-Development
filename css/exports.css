@@ -42,40 +42,6 @@
  #printReport .report-heading{break-after:avoid}#printReport .report-table tr{break-inside:avoid}
 }
 
-/* Wallet-size DAF 629 draft. Each side exactly CR80 / ID-1 size 3.375 x 2.125 inches. */
-.daf629-print{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:.22in!important;padding:12px!important;background:#fff!important;color:#151515!important}
-.wallet-pair{display:flex;gap:.12in;align-items:flex-start;justify-content:flex-start;break-inside:avoid;page-break-inside:avoid;margin:0!important}
-.wallet-card{box-sizing:border-box!important;width:3.375in!important;height:2.125in!important;min-width:3.375in!important;max-width:3.375in!important;min-height:2.125in!important;max-height:2.125in!important;overflow:hidden!important;flex:none!important;padding:.105in!important;background:#fff!important;color:#141414!important;border:1px solid #333!important;border-radius:0!important;box-shadow:none!important;font:8px/1.15 Arial,Helvetica,sans-serif!important;display:flex;flex-direction:column;break-inside:avoid}
-.wallet-card *{box-sizing:border-box}
-.wallet-head{display:flex;align-items:center;justify-content:space-between;gap:4px;border-bottom:1px solid #222;padding-bottom:4px;margin-bottom:5px;white-space:nowrap}
-.wallet-head strong{font-size:10px;letter-spacing:.2px}
-.wallet-head span{font-size:6.5px;letter-spacing:.2px}
-.wallet-fields{display:grid;grid-template-columns:1fr 1fr;gap:3px 7px;flex:1;align-content:start}
-.wallet-field{display:flex;flex-direction:column;min-width:0;border-bottom:1px solid #aaa;min-height:24px;padding:0 0 2px;justify-content:center}
-.wallet-field span{font-size:6.6px;color:#484848;font-weight:700;letter-spacing:.15px}
-.wallet-field strong{display:block;overflow-wrap:anywhere;font-size:8.5px;line-height:1.12}
-.wallet-front .wallet-field:nth-child(1),.wallet-front .wallet-field:nth-child(4){grid-column:span 2}
-.wallet-foot{margin-top:auto;border-top:1px solid #bbb;padding-top:3px;font-size:6px;color:#777;text-align:right;letter-spacing:.25px}
-.wallet-official{margin:2px 0 5px}
-.wallet-signature{display:flex;flex-direction:column;margin-top:8px;gap:2px}
-.wallet-signature span{font-size:6.7px;font-weight:700;letter-spacing:.15px}
-.wallet-signature div{height:12px;border-bottom:1px solid #444}
-.wallet-back-note{font-size:6px;color:#666;margin-top:7px}
-@media screen and (max-width:760px){.daf629-print{overflow-x:auto!important;width:100%!important}.wallet-pair{min-width:6.87in}}
-@media print{
- @page{size:letter portrait;margin:.35in}
- html,body{background:#fff!important}
- body>header{display:none!important}
- body>main{display:block!important;padding:0!important;margin:0!important;max-width:none!important;background:#fff!important}
- main>#nav,main>.footer,.export-controls{display:none!important}
- #app{display:block!important;background:#fff!important;margin:0!important;padding:0!important;max-width:none!important}
- #printReport.daf629-print{display:flex!important;flex-direction:column!important;gap:.22in!important;align-items:flex-start!important;padding:0!important;margin:0!important;overflow:visible!important}
- .wallet-pair{display:flex!important;gap:.12in!important;break-inside:avoid!important;page-break-inside:avoid!important}
- .wallet-card{width:3.375in!important;height:2.125in!important;min-width:3.375in!important;max-width:3.375in!important;min-height:2.125in!important;max-height:2.125in!important;page-break-inside:avoid!important;background:white!important;color:black!important}
- .wallet-card *{color:#161616!important}
-}
-
-
 /* RangeTrack development visual refresh: approved charcoal + tactical lime mobile scoring */
 :root{--rt-lime:#8CCF54;--rt-bg:#0b1014;--rt-card:#171f24;--rt-card2:#1d272d;--rt-line:#34434a;--rt-muted:#9faeb2}
 body{background:#0c1115}
