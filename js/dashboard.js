@@ -13,10 +13,10 @@ function dashboard(){
   <section class="rt-dashboard-active-overview" aria-label="Active classes overview">
    <div class="rt-dashboard-active-count"><strong>${activeCount}</strong><small>ACTIVE ${activeCount===1?'CLASS':'CLASSES'}</small></div>
    <div class="rt-dashboard-active-courses"><span>ACTIVE COURSE${activeCount===1?'':'S'}</span>
-    ${activeCount?Object.entries(db.sessions).map(([key,session])=>{
+    ${activeCount?Object.entries(db.sessions).map(([key,session],index)=>{
       const courseName=session.template?.name||courseById(key.split('|')[1])?.name||'Unnamed Course';
       const weaponName=key.split('|')[0]||'';
-      return `<div class="rt-dashboard-active-course"><strong>${safe(courseName)}</strong>${weaponName?`<small>${safe(weaponName)}</small>`:''}</div>`;
+      return `<button type="button" class="rt-dashboard-active-course" onclick="rtDashboardOpenActive(${index})" aria-label="Open ${safe(courseName)}"><strong>${safe(courseName)}</strong>${weaponName?`<small>${safe(weaponName)}</small>`:''}<span class="rt-dashboard-active-arrow" aria-hidden="true">›</span></button>`;
     }).join(''):'<p>No active courses</p>'}
    </div>
   </section>
@@ -37,7 +37,6 @@ function dashboard(){
      ${db.weapon?`<div class="rt-dashboard-choices rt-dashboard-course-choices">${availableCourses(db.weapon).map(c=>`<button type="button" class="${db.course===c.id?'rt-dashboard-selected':''}" onclick="chooseCourse('${safe(c.id)}')">${safe(c.name)}</button>`).join('')||'<p class="rt-dashboard-help">No courses assigned. Use Course Editor to assign one.</p>'}</div>
      ${selected?`<div class="rt-dashboard-selection"><p>${safe(selected.notes||'Ready to begin qualification.')}</p><button type="button" class="rt-dashboard-start" onclick="openCourse()">${db.sessions[sessionKey()]?'Continue':'Start'} ${safe(selected.name)} <span>›</span></button></div>`:''}`:'<p class="rt-dashboard-help">Select a weapon system above to see its available courses.</p>'}
     </div>`:''}
-   <button type="button" class="rt-dashboard-card" onclick="tab('active')"><span class="rt-dashboard-card-icon">▦</span><span class="rt-dashboard-card-copy"><strong>Active Courses</strong><small>Open and manage saved classes (${activeCount})</small></span><span class="rt-dashboard-card-chevron">›</span></button>
   </section>
   <section class="rt-dashboard-shell">
    <header class="rt-dashboard-section-heading"><span class="rt-eyebrow">02 / COURSE MANAGEMENT</span><h3>Course Management</h3></header>
@@ -45,6 +44,10 @@ function dashboard(){
    <button type="button" class="rt-dashboard-card" onclick="tab('weapons')"><span class="rt-dashboard-card-icon">✎</span><span class="rt-dashboard-card-copy"><strong>Manage Weapon Systems</strong><small>Add or remove available weapon systems</small></span><span class="rt-dashboard-card-chevron">›</span></button>
   </section>
  </div>`;
+}
+function rtDashboardOpenActive(index){
+ const key=Object.keys(db.sessions)[index];
+ if(key&&db.sessions[key])resume(key);
 }
 let dashboardSection='';
 function toggleDashboardSection(section){dashboardSection=dashboardSection===section?'':section;render()}
