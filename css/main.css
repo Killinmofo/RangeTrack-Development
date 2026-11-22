@@ -379,3 +379,11 @@ body{background:radial-gradient(ellipse at 50% -10%,rgba(48,75,47,.22),transpare
 body.rt-scoring-keyboard .rt-sticky-footer{padding-bottom:6px}
 .rt-score-input:focus{outline:2px solid #b0d46c;outline-offset:1px;scroll-margin-bottom:110px}
 @media(max-width:700px){body.rt-scoring-keyboard .rt-score-view{padding-bottom:135px}}
+
+/* Five compact scoring actions on narrow phone screens. */
+.rt-sticky-footer .rt-prev-btn{min-width:0}
+@media(max-width:600px){
+ .rt-sticky-footer{gap:3px!important}
+ .rt-sticky-footer>button{min-width:0!important;flex:1 1 0!important;padding:8px 3px!important;font-size:11px!important}
+ .rt-sticky-footer>button small{font-size:10px!important;white-space:nowrap}
+}
