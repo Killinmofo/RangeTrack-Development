@@ -38,7 +38,7 @@ function totals(){
   <section class="rt-summary-shell rt-summary-report">
    <div class="rt-summary-heading"><div><small class="rt-eyebrow">DETAILED BREAKDOWN</small><h3>Qualification Results</h3></div></div>
    <div class="rt-summary-detail-scroll" role="region" aria-label="Scrollable qualification details" tabindex="0">
-   <div class="rt-summary-detail-columns"><span>SHOOTER / LANE</span><span>BUTT #</span><span>WEAPON SERIAL</span><span>TOTAL SCORE</span><span>PASS / FAIL</span></div>
+   <div class="rt-summary-detail-columns"><span>SHOOTER / LANE</span><span>BUTT #</span><span>WEAPON SN</span><span>TOTAL SCORE</span><span>PASS / FAIL</span></div>
    <div class="rt-summary-detail-rows">
     ${[...s.shooters].sort((a,b)=>(Number(a.lane)||999)-(Number(b.lane)||999)||a.name.localeCompare(b.name)).map(p=>{
       const result=reportResult(overallStatus(p)),score=effectivePaperTotal(p);
@@ -55,7 +55,7 @@ function totals(){
   </section>
   <section class="rt-summary-shell rt-summary-actions">
    <div class="rt-summary-heading"><div><small class="rt-eyebrow">DOWNLOAD / PRINT</small><h3>Export Results</h3></div></div>
-   <p>Export the class report with each firing table's outcome, remedial results, total score, ammunition, and overall qualification.</p>
+   <p>Export the same concise breakdown shown above: shooter, lane, butt number, weapon SN, total score, and pass/fail.</p>
    <div class="rt-summary-export-buttons">
     <button type="button" onclick="exportExcel()">Export Excel (CSV)</button>
     <button type="button" class="rt-summary-export-primary" onclick="exportPDF()">Export PDF</button>
