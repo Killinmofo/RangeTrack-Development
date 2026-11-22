@@ -229,7 +229,7 @@ function saveScoreShooterModal(e,id){
  const name=String(data.get('name')||'').trim();if(!name)return;
  let p=s.shooters.find(x=>x.id===id);
  if(!p){p=makeShooter(name,'',n(s.defaultRounds));s.shooters.push(p)}
- for(const key of ['name','grade','organization']if(data.has(key))p[key]=String(data.get(key)||'').trim();
+ for(const key of ['name','grade','organization'])if(data.has(key))p[key]=String(data.get(key)||'').trim();
  p.lane=data.get('lane')===''?'':n(data.get('lane'));p.initial=n(data.get('initial'));
  s.selected=p.id;save();closeScoreShooterModal();render();
 }
