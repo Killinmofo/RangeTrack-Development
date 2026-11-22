@@ -80,3 +80,36 @@ body:has(.rt-shooters-view) #nav{display:none}
  min-width:0;
  text-align:left;
 }
+
+/* iOS date control: use the same flex column and box sizing as the text fields. */
+.rt-class-settings-fields{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ width:100%;
+ max-width:100%;
+ min-width:0;
+}
+.rt-class-settings-fields>label{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ overflow:hidden;
+}
+.rt-class-settings-fields>label>input,
+.rt-class-settings-fields>label>input[type="date"]{
+ display:block;
+ flex:0 1 auto;
+ width:100%;
+ min-width:0;
+ max-width:100%;
+ box-sizing:border-box;
+ margin:0;
+}
+.rt-class-settings-fields input[type="date"]::-webkit-datetime-edit{
+ min-width:0;
+ overflow:hidden;
+}
