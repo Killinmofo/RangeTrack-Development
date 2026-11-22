@@ -1,5 +1,5 @@
 /* RangeTrack offline shell. Update CACHE_VERSION when the app's file list changes. */
-const CACHE_VERSION = 'rangetrack-modular-v19';
+const CACHE_VERSION = 'rangetrack-modular-v20';
 const ASSETS = [
   './', './index.html',
   './css/main.css', './css/exports.css', './css/shooters.css',
