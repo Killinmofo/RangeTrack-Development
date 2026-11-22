@@ -220,7 +220,6 @@ function roster(){
      <button type="button" onclick="applyRounds()">Apply rounds to all shooters</button>
      <p class="muted">Set the qualification date and default ammunition for this class.</p>
     </div>
-    </div>
     </details>
     <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
     <div class="rt-roster-bulkbar">
