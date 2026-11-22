@@ -44,6 +44,15 @@ function rtClearRoster(){
  if(!window.confirm('Clear all '+s.shooters.length+' shooters from this class? This permanently removes their saved scores and personnel details from this class.'))return;
  s.shooters=[];s.selected='';save();rtRosterQuery='';render();
 }
+function rtRosterRemove(){
+ const s=current(),p=s?.shooters.find(shooter=>shooter.id===s.selected);
+ if(!p){window.alert('Select the shooter you want to remove from the roster first.');return;}
+ if(!window.confirm('Remove '+p.name+' from this class? Their saved scores and personnel details for this class will also be deleted.'))return;
+ s.shooters=s.shooters.filter(shooter=>shooter.id!==p.id);
+ s.selected='';
+ save();
+ render();
+}
 function rtRosterEdit(){
  const s=current();if(!s)return;
  if(!s.selected||!s.shooters.some(p=>p.id===s.selected)){
@@ -105,6 +114,7 @@ function roster(){
   <strong>Roster options</strong>
   <button type="button" onclick="rtRosterSort('lane')">Sort by lane ${s.rosterSort!=='name'?'✓':''}</button>
   <button type="button" onclick="rtRosterSort('name')">Sort by name ${s.rosterSort==='name'?'✓':''}</button>
+  <button type="button" class="rt-clear-roster" onclick="rtRosterRemove()" ${shooters.length?'':'disabled'}>Remove Shooter</button>
   <button type="button" class="rt-clear-roster" onclick="rtClearRoster()" ${shooters.length?'':'disabled'}>Clear Roster</button>
  </div>
  <nav class="rt-roster-footer" aria-label="Shooter management">
