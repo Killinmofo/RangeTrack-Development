@@ -23,12 +23,40 @@ function roster(){
 function phaseCell(p,attempt,phase){const obj=(attempt==='initial'?p.initialScores:p.refireScores)[phase]||blank();return `<td>${['head','body','exterior'].map(k=>`<label class="cellfield"><span>${k==='exterior'?'Exterior':k==='head'?'Head':'Body'}</span><input type="number" min="0" inputmode="numeric" placeholder="—" value="${safe(obj[k])}" oninput="setScore('${p.id}','${attempt}','${phase}','${k}',this.value)"></label>`).join('')}<div class="overall"><strong>Overall</strong><strong id="sum-${attempt}-${phase.replace(' ','')}">${sumPhase(obj)}</strong></div></td>`}
 
 let scoreTableIndex=0;
+function scoringTableMissingCount(){
+ const s=current(),table=tableList()[scoreTableIndex];
+ if(!s||!table||db.view!=='score')return 0;
+ let missing=0;
+ for(const p of s.shooters||[]){
+  for(const attempt of ['initial','refire']){
+   if(attempt==='refire'&&!refireEligible(p,table))continue;
+   const scores=attemptRecord(p,attempt,table);
+   for(const a of table.areas||[]){
+    if(a.mode==='sum')continue;
+    if(scores[a.id]===undefined||scores[a.id]===null||scores[a.id]==='')missing++;
+   }
+  }
+ }
+ return missing;
+}
+function rtSetScoringTable(target){
+ const tables=tableList();
+ if(!tables.length || !Number.isInteger(target)||target<0||target>=tables.length)return false;
+ if(target===scoreTableIndex)return true;
+ const missing=scoringTableMissingCount();
+ if(missing>0&&!window.confirm('This firing table has '+missing+' incomplete scoring '+(missing===1?'field':'fields')+'. Continue to another table?'))return false;
+ scoreTableIndex=target;
+ if(typeof rtLastField!=='undefined')rtLastField='';
+ render();
+ document.getElementById('app')?.scrollIntoView({block:'start'});
+ return true;
+}
+function selectScoringTable(select){
+ const target=Number(select.value);
+ if(!rtSetScoringTable(target))select.value=String(scoreTableIndex);
+}
 function changeScoringTable(delta){
-  const tables=tableList();
-  if(!tables.length)return;
-  scoreTableIndex=Math.max(0,Math.min(tables.length-1,scoreTableIndex+delta));
-  render();
-  document.getElementById('app')?.scrollIntoView({block:'start'});
+ rtSetScoringTable(scoreTableIndex+delta);
 }
 function initiateRemedialRow(id){const t=tableList()[scoreTableIndex],p=current()?.shooters.find(x=>x.id===id);if(!t||!p||tableStatus(p,'initial',t)!=='Fail')return;if(!p.remedialTables)p.remedialTables={};p.remedialTables[t.id]=true;save();render()}
 function refreshScoringTable(){
