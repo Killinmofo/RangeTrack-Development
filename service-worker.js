@@ -1,11 +1,11 @@
 /* RangeTrack offline shell. Update CACHE_VERSION when the app's file list changes. */
-const CACHE_VERSION = 'rangetrack-modular-v3';
+const CACHE_VERSION = 'rangetrack-modular-v4';
 const ASSETS = [
   './', './index.html',
   './css/main.css', './css/exports.css',
   './js/core.js', './js/sessions.js', './js/dashboard.js',
   './js/course-editor.js', './js/roster.js', './js/scoring.js',
-  './js/reports.js', './js/totals.js', './js/bootstrap.js'
+  './js/reports.js', './js/totals.js', './js/scoring-navigation.js', './js/bootstrap.js'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
