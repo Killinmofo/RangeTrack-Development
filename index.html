@@ -843,73 +843,98 @@ const refireOpenIds=new Set();
 function setScoringRefireOpen(id,isOpen){
  if(isOpen)refireOpenIds.add(id);else refireOpenIds.delete(id);
 }
+function shortScoreName(name){
+ const raw=String(name||'').trim();if(!raw)return '—';
+ if(raw.includes(',')){const [last,first]=raw.split(',');return last.trim().toUpperCase()+', '+(first.trim().charAt(0)||'').toUpperCase()+'.'}
+ const parts=raw.split(/\s+/);return parts.length>1?parts.at(-1).toUpperCase()+', '+parts[0].charAt(0).toUpperCase()+'.':raw.toUpperCase();
+}
+
+function shortScoreStatus(v){return v==='Expert'?'E':v==='Qualified'||v==='Pass'?'Q':v==='Fail'?'UQ':'—'}
+
+function selectScoreShooter(id){
+ const session=current();if(!session)return;session.selected=id;save();
+ document.querySelectorAll('.rt-score-person').forEach(row=>row.classList.toggle('rt-selected',row.dataset.shooterId===id));
+}
+
+function openScoreShooterModal(mode){
+ const s=current();if(!s)return;
+ const p=mode==='edit'?s.shooters.find(x=>x.id===s.selected):null;
+ if(mode==='edit'&&!p){alert('Select a shooter from the score table first.');return}
+ const root=document.getElementById('rt-modal-root');if(!root)return;
+ const rifle=rifleForCard();
+ root.innerHTML=`<div class="rt-modal-overlay" onclick="closeScoreShooterModal(event)"><section class="rt-modal" role="dialog" aria-modal="true" aria-labelledby="rt-dialog-title"><header><div><small>CLASS ROSTER</small><h3 id="rt-dialog-title">${p?'Edit Shooter':'Add Shooter'}</h3></div><button type="button" class="rt-modal-close" onclick="closeScoreShooterModal()">✕</button></header>
+ <form id="rt-shooter-form" onsubmit="saveScoreShooterModal(event,'${p?p.id:''}')">
+ <label>Full name<input name="name" required autocomplete="off" value="${safe(p?.name||'')}" placeholder="Smith, John"></label>
+ <div class="rt-modal-grid"><label>Lane<input name="lane" type="number" min="1" value="${safe(p?.lane??'')}"></label><label>Initial Ammo<input name="initial" type="number" min="0" value="${safe(p?.initial??s.defaultRounds??0)}"></label></div>
+ <div class="rt-modal-grid"><label>Grade<input name="grade" autocomplete="off" value="${safe(p?.grade||'')}"></label><label>Organization<input name="organization" autocomplete="off" value="${safe(p?.organization||'')}"></label></div>
+ <label>DoD ID (optional)<input name="dodId" inputmode="numeric" autocomplete="off" value="${safe(p?.dodId||'')}"></label>
+ <label>Weapon serial number (optional)<input name="weaponSerial" autocomplete="off" value="${safe(p?.weaponSerial||'')}"></label>
+ ${rifle?`<label>Rifle Butt #<input name="buttNumber" value="${safe(p?.buttNumber||'')}"></label>`:''}
+ <footer><button type="button" onclick="closeScoreShooterModal()">Cancel</button><button type="submit" class="primary">${p?'Save Changes':'Add Shooter'}</button></footer>
+ </form></section></div>`;
+ document.body.classList.add('rt-modal-open');
+ root.querySelector('[name="name"]')?.focus();
+}
+
+function closeScoreShooterModal(e){if(e&&e.target!==e.currentTarget)return;const root=document.getElementById('rt-modal-root');if(root)root.innerHTML='';document.body.classList.remove('rt-modal-open')}
+
+function saveScoreShooterModal(e,id){
+ e.preventDefault();const data=new FormData(e.target),s=current();if(!s)return;
+ const name=String(data.get('name')||'').trim();if(!name)return;
+ let p=s.shooters.find(x=>x.id===id);
+ if(!p){p=makeShooter(name,'',n(s.defaultRounds));s.shooters.push(p)}
+ for(const key of ['name','grade','organization','dodId','weaponSerial','buttNumber'])if(data.has(key))p[key]=String(data.get(key)||'').trim();
+ p.lane=data.get('lane')===''?'':n(data.get('lane'));p.initial=n(data.get('initial'));
+ s.selected=p.id;save();closeScoreShooterModal();render();
+}
+
 function score(){
  const session=current(),tables=tableList();
- if(!session)return '<section class="panel"><h2>No active course</h2></section>';
- if(!session.shooters.length)return `<section class="panel"><h2>No shooters</h2><p>Add shooters before scoring.</p><button class="primary" onclick="tab('roster')">Go to Shooters</button></section>`;
- if(!tables.length)return '<section class="panel">No Firing Tables configured.</section>';
+ if(!session)return '<section class="panel">No active course</section>';
+ if(!tables.length)return '<section class="panel">No firing tables configured.</section>';
  scoreTableIndex=Math.min(Math.max(0,scoreTableIndex),tables.length-1);
- const t=tables[scoreTableIndex];
- const shooters=[...session.shooters].sort((a,b)=>(Number(a.lane)||999)-(Number(b.lane)||999)||a.name.localeCompare(b.name));
- const initials=shooters.filter(p=>tableStatus(p,'initial',t)!=='Incomplete').length;
- const passed=shooters.filter(p=>['Qualified','Expert'].includes(effectiveTableStatus(p,t))).length;
- const areaCount=t.areas.length;
- const mobileCols=Math.min(4,Math.max(1,areaCount));
- const shortArea=name=>{const x=String(name||'Score').trim();const map=[[/hits? on paper|paper hits?/i,'Paper'],[/head/i,'Head'],[/body/i,'Body'],[/exterior/i,'Outer'],[/qualif/i,'Qual'],[/expert/i,'Expert'],[/total/i,'Total'],[/points?/i,'Pts'],[/rounds?/i,'Rds'],[/time/i,'Time']];for(const [re,label] of map)if(re.test(x))return label;return x.length>10?x.slice(0,9).trim()+'…':x;};
- const columnWidth=`grid-template-columns: minmax(152px,1.7fr) 55px 64px ${t.areas.map(()=>'minmax(78px,1fr)').join(' ')} 70px 112px 96px;`;
- const minWidth=Math.max(790,550+areaCount*94);
- const nav=()=>`<div class="score-nav score-nav-compact"><button type="button" onclick="changeScoringTable(-1)" ${scoreTableIndex===0?'disabled':''}>← Previous</button><span>${scoreTableIndex+1} / ${tables.length}</span><button type="button" class="primary" onclick="changeScoringTable(1)" ${scoreTableIndex===tables.length-1?'disabled':''}>Next →</button></div>`;
- const badge=status=>`<span class="scorer-status ${status==='Fail'?'status-fail':status==='Incomplete'?'status-pending':'status-pass'}" data-initial-status>${safe(status)}</span>`;
- const input=(p,attempt,a)=>{
-  const record=attemptRecord(p,attempt,t),value=areaValue(record,t,a);
-  if(a.mode==='sum')return `<output class="grid-calc" data-score-calc="${safe(attempt+'|'+a.id)}">${value===''?'—':value}</output>`;
-  return `<input class="grid-score-input" type="number" min="0" step="1" inputmode="numeric" aria-label="${safe(p.name+' '+a.name+' '+attempt)}" placeholder="—" value="${safe(record[a.id]??'')}" oninput="setAreaScore('${p.id}','${attempt}','${t.id}','${a.id}',this.value)">`;
- };
- const row=p=>{
-  const initial=tableStatus(p,'initial',t);
-  const final=effectiveTableStatus(p,t);
-  const hits=scoreTotals(attemptRecord(p,'initial',t),t).qualifying;
-  const totalScore=effectivePaperTotal(p);
-  const eligible=refireEligible(p,t);
-  const active=remedialActive(p);
-  const failAny=tables.some(x=>tableStatus(p,'initial',x)==='Fail');
-  const refireTotal=scoreTotals(attemptRecord(p,'refire',t),t).qualifying;
-  const rowMarkup=`<div class="score-grid-row" style="${columnWidth}--mobile-score-columns:${mobileCols};" role="row">
-    <div class="grid-shooter" role="cell"><strong>${safe(p.name)}</strong><small>Lane ${safe(p.lane||'—')} · Ammo ${total(p)}</small></div>
-    <div class="grid-cell grid-metadata" role="cell">${safe(p.lane||'—')}</div>
-    <div class="grid-cell grid-metadata grid-butt" role="cell">${safe(p.buttNumber||'—')}</div>
-    ${t.areas.map(a=>`<div class="grid-cell grid-input-cell" role="cell"><span class="mobile-score-label" title="${safe(a.name)}">${safe(shortArea(a.name))}</span>${input(p,'initial',a)}</div>`).join('')}
-    <div class="grid-cell grid-hits" role="cell"><strong data-initial-hits>${hits===''?'—':hits}</strong></div>
-    <div class="grid-cell grid-result" role="cell">${badge(initial)}<small data-effective-status>${safe(final)}</small></div>
-    <div class="grid-cell grid-overall" role="cell"><strong data-overall-score>${totalScore===''?'—':totalScore}</strong><small data-overall-status>${safe(overallStatus(p))}</small></div>
+ const t=tables[scoreTableIndex],shooters=[...session.shooters].sort((a,b)=>(Number(a.lane)||999)-(Number(b.lane)||999)||a.name.localeCompare(b.name));
+ const completed=shooters.filter(p=>tableStatus(p,'initial',t)!=='Incomplete').length;
+ const passing=shooters.filter(p=>['Qualified','Expert'].includes(effectiveTableStatus(p,t))).length;
+ const failed=shooters.filter(p=>effectiveTableStatus(p,t)==='Fail').length;
+ const pending=remedialPendingForTable(t).length;
+ const cols=`minmax(82px,1.35fr) repeat(${t.areas.length},minmax(38px,1fr)) 45px 37px`;
+ const label=a=>{const v=String(a||'Score');return /head/i.test(v)?'Head':/body/i.test(v)?'Body':/exterior|outer/i.test(v)?'Outer':/vital/i.test(v)?'Vital':/paper/i.test(v)?'Paper':/total/i.test(v)?'Total':v.length>7?v.slice(0,6)+'…':v};
+ const input=(p,at,a)=>{const record=attemptRecord(p,at,t),value=areaValue(record,t,a);return a.mode==='sum'?`<output class="rt-score-calc" data-cell="${safe(p.id+'|'+at+'|'+a.id)}">${value===''?'—':safe(value)}</output>`:`<input type="number" min="0" step="1" inputmode="numeric" class="rt-score-input" data-shooter="${safe(p.id)}" data-attempt="${at}" data-area="${safe(a.id)}" aria-label="${safe(p.name+' '+a.name+' '+at)}" value="${safe(record[a.id]??'')}" placeholder="—" oninput="setAreaScore('${p.id}','${at}','${t.id}','${a.id}',this.value)">`};
+ const renderRow=(p,at)=>{
+  const retry=at==='refire',raw=tableStatus(p,at,t),status=retry?raw:effectiveTableStatus(p,t);
+  const paper=scoreTotals(attemptRecord(p,at,t),t).qualifying;
+  const countStatus=shortScoreStatus(status), selected=session.selected===p.id;
+  return `<div class="rt-score-person ${retry?'rt-refire-row':''} ${selected?'rt-selected':''}" data-shooter-id="${safe(p.id)}" data-attempt-row="${at}" style="--rt-cols:${cols}">
+   <div class="rt-score-person-name"><button type="button" onclick="selectScoreShooter('${p.id}')" aria-label="Select ${safe(p.name)}"><strong>${retry?'↳ RE-FIRE':safe(shortScoreName(p.name))}</strong><small>${retry?'Table '+(scoreTableIndex+1):'LANE '+safe(p.lane||'—')}</small></button></div>
+   ${t.areas.map(a=>`<div class="rt-score-cell">${input(p,at,a)}</div>`).join('')}
+   <div class="rt-score-paper" data-rt-hits="${safe(p.id+'|'+at)}">${paper===''?'—':paper}</div>
+   <div class="rt-score-result"><span class="rt-status ${countStatus==='UQ'?'rt-uq':countStatus==='Q'?'rt-q':countStatus==='E'?'rt-e':'rt-empty'}" data-rt-status="${safe(p.id+'|'+at)}">${countStatus}</span></div>
    </div>`;
-  const remedial=eligible?`<details class="grid-refire" ${refireOpenIds.has(p.id)?'open':''} ontoggle="setScoringRefireOpen('${p.id}',this.open)">
-    <summary> <span>↳ Re-Fire · ${safe(p.name)}</span> <span data-refire-status>${safe(tableStatus(p,'refire',t))}</span> </summary>
-    <div class="refire-grid-scroll"><div class="score-grid-row score-refire-row" role="row" style="${columnWidth}--mobile-score-columns:${mobileCols};min-width:${minWidth}px">
-     <div class="grid-shooter" role="cell"><strong>Re-Fire</strong><small>${safe(p.name)}</small></div>
-     <div class="grid-cell grid-metadata">${safe(p.lane||'—')}</div>
-     <div class="grid-cell grid-metadata grid-butt">${safe(p.buttNumber||'—')}</div>
-     ${t.areas.map(a=>`<div class="grid-cell grid-input-cell"><span class="mobile-score-label" title="${safe(a.name)}">${safe(shortArea(a.name))}</span>${input(p,'refire',a)}</div>`).join('')}
-     <div class="grid-cell grid-hits"><strong data-refire-hits>${refireTotal===''?'—':refireTotal}</strong></div>
-     <div class="grid-cell grid-result" data-refire-display>${safe(tableStatus(p,'refire',t))}</div>
-     <div class="grid-cell grid-overall">Remedial</div>
-    </div></div>
-   </details>`:(!active?`<div class="grid-remedial-bar"><span>${initial==='Fail'?'Failed initial score. Remedial requires manual initiation.':' '}</span><button type="button" data-initiate-remedial onclick="initiateRemedialRow('${p.id}')" ${failAny?'':'disabled'}>Initiate Remedial</button></div>`:'');
-  return `<div class="scorer-card score-grid-shooter-group" data-shooter-id="${safe(p.id)}" role="rowgroup" style="--mobile-score-columns:${mobileCols}">${rowMarkup}${remedial}</div>`;
  };
- return `<section class="panel score-section score-grid-header">
- <div class="score-head"><div><h2>Score</h2><p class="muted">${safe(db.weapon)} · ${safe(session.template?.name||db.course)} · ${safe(session.date)}</p></div><span class="tag">CLASS SCORING</span></div>
- <div class="score-toolbar"><label class="score-table-choose">Firing Table<select onchange="scoreTableIndex=Number(this.value);render()">${tables.map((x,i)=>`<option value="${i}" ${i===scoreTableIndex?'selected':''}>${safe(x.name)}</option>`).join('')}</select></label>${nav()}</div>
- <div class="class-score-stats"><div><b>${shooters.length}</b><span>Shooters</span></div><div><b data-class-completed>${initials}</b><span>Scored</span></div><div><b data-class-passed>${passed}</b><span>Passing</span></div><div class="class-auto-save"><span class="live-save-dot"></span> Scores save automatically</div></div>
+ return `<div class="rt-score-view">
+ <section class="rt-course-banner">
+ <div class="rt-banner-top"><span class="rt-eyebrow">CATM · LIVE CLASS</span><span class="rt-live"><i></i> AUTO-SAVED</span></div>
+ <div class="rt-banner-main"><div><h2>${safe(db.weapon)} <span>Qualification</span></h2><p>${safe(session.template?.name||db.course)} · ${safe(session.date)}</p></div><span class="rt-table-counter">TABLE ${scoreTableIndex+1} / ${tables.length}</span></div>
+ <div class="rt-table-control"><button type="button" onclick="changeScoringTable(-1)" ${scoreTableIndex===0?'disabled':''}>‹</button><select aria-label="Firing table" onchange="scoreTableIndex=Number(this.value);render()">${tables.map((x,i)=>`<option value="${i}" ${i===scoreTableIndex?'selected':''}>${safe(x.name)}</option>`).join('')}</select><button type="button" onclick="changeScoringTable(1)" ${scoreTableIndex===tables.length-1?'disabled':''}>›</button></div>
  </section>
- <section class="panel score-grid-panel"><div class="score-grid-title"><div><strong>${safe(t.name)}</strong><small>Firing Table ${scoreTableIndex+1} · ${safe(t.rounds===''?'Rounds not set':t.rounds+' rounds')}</small></div><span>${shooters.length} shooters</span></div>
- <div class="score-grid-scroll" role="table" aria-label="${safe(t.name+' class scoring')}" style="--score-min-width:${minWidth}px">
- <div class="score-grid-columns" style="${columnWidth}--mobile-score-columns:${mobileCols};" role="row"><div role="columnheader">Shooter</div><div role="columnheader">Lane</div><div role="columnheader">Butt #</div>${t.areas.map(a=>`<div role="columnheader">${safe(a.name)}</div>`).join('')}<div role="columnheader">Hits</div><div role="columnheader">Table Status</div><div role="columnheader">Total / Overall</div></div>
- ${shooters.map(row).join('')}
+ <div class="rt-stats"><div><small>SHOOTERS</small><strong data-rt-shooters>${shooters.length}</strong></div><div><small>SCORED</small><strong data-rt-completed>${completed}</strong></div><div><small>QUALIFIED</small><strong class="rt-lime" data-rt-passing>${passing}</strong></div><div><small>UNQUALIFIED</small><strong class="rt-red" data-rt-failing>${failed}</strong></div></div>
+ <section class="rt-table-shell">
+ <div class="rt-table-heading"><div><span class="rt-eyebrow">SCORING MATRIX</span><h3>${safe(t.name)}</h3></div><small>${t.rounds===''?'':safe(t.rounds)+' RDS'} · ${shooters.length} SHOOTERS</small></div>
+ <div class="rt-score-grid" style="--rt-cols:${cols}">
+ <div class="rt-score-columns"><span>SHOOTER</span>${t.areas.map(a=>`<span title="${safe(a.name)}">${safe(label(a.name))}</span>`).join('')}<span>HITS</span><span>QUAL</span></div>
+ ${shooters.map(p=>renderRow(p,'initial')+(refireEligible(p,t)?renderRow(p,'refire'):'' )).join('')||'<div class="rt-empty-state">No shooters added yet. Use Add below to start scoring.</div>'}
  </div>
- <div class="score-grid-caption">Each shooter stays on a separate line. Additional scoring areas wrap to fit your screen.</div>
+ <div class="rt-table-legend"><span><i class="rt-dot q"></i> Q Qualified</span><span><i class="rt-dot uq"></i> UQ Unqualified</span><span><i class="rt-dot e"></i> E Expert</span></div>
  </section>
- <section class="panel score-bottom score-grid-bottom">${nav()}<p class="muted">Only manually initiated remedial scores are entered in Re-Fire. Initial scores remain on record.</p></section>`;
+ <div id="rt-modal-root"></div>
+ </div>
+ <nav class="rt-sticky-footer" aria-label="Scoring actions">
+  <button type="button" onclick="openScoreShooterModal('add')"><span class="rt-footer-icon">＋</span><small>Add</small></button>
+  <button type="button" onclick="openScoreShooterModal('edit')" ${!session.shooters.length?'disabled':''}><span class="rt-footer-icon">✎</span><small>Edit</small></button>
+  <button type="button" class="rt-remedial-btn ${pending?'rt-has-pending':''}" onclick="initiateTableRemedials()" ${!pending?'disabled':''}><span class="rt-footer-icon">↻${pending?`<b class="rt-remedial-count">${pending}</b>`:''}</span><small>Remedial</small></button>
+  <button type="button" class="rt-next-btn" onclick="changeScoringTable(1)" ${scoreTableIndex===tables.length-1?'disabled':''}><span class="rt-footer-icon">➜</span><small>Next Table</small></button>
+ </nav>`;
 }
 
 // Compact operational summary; detailed scoring remains in stored shooter records.
