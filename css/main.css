@@ -373,3 +373,9 @@ body{background:radial-gradient(ellipse at 50% -10%,rgba(48,75,47,.22),transpare
 
 /* Keep the mobile app at its intended scale without blocking scrolling or taps. */
 @media (pointer:coarse){html,body{touch-action:pan-x pan-y}input,select,textarea{font-size:16px}}
+
+/* Keep scoring controls above the iOS software keyboard. */
+.rt-sticky-footer{bottom:var(--rt-keyboard-inset,0px)}
+body.rt-scoring-keyboard .rt-sticky-footer{padding-bottom:6px}
+.rt-score-input:focus{outline:2px solid #b0d46c;outline-offset:1px;scroll-margin-bottom:110px}
+@media(max-width:700px){body.rt-scoring-keyboard .rt-score-view{padding-bottom:135px}}
