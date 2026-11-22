@@ -11,7 +11,7 @@ function score(){
  const pending=remedialPendingForTable(t).length;
  const cols=`minmax(82px,1.35fr) repeat(${t.areas.length},minmax(38px,1fr)) 45px 37px`;
  const label=a=>{const v=String(a||'Score');return /head/i.test(v)?'Head':/body/i.test(v)?'Body':/exterior|outer/i.test(v)?'Outer':/vital/i.test(v)?'Vital':/paper/i.test(v)?'Paper':/total/i.test(v)?'Total':v.length>7?v.slice(0,6)+'…':v};
- const input=(p,at,a)=>{const record=attemptRecord(p,at,t),value=areaValue(record,t,a);return a.mode==='sum'?`<output class="rt-score-calc" data-cell="${safe(p.id+'|'+at+'|'+a.id)}">${value===''?'—':safe(value)}</output>`:`<input type="number" min="0" step="1" inputmode="numeric" class="rt-score-input" data-shooter="${safe(p.id)}" data-attempt="${at}" data-area="${safe(a.id)}" aria-label="${safe(p.name+' '+a.name+' '+at)}" value="${safe(record[a.id]??'')}" placeholder="—" oninput="setAreaScore('${p.id}','${at}','${t.id}','${a.id}',this.value)">`};
+ const input=(p,at,a)=>{const record=attemptRecord(p,at,t),value=areaValue(record,t,a);return a.mode==='sum'?`<output class="rt-score-calc" data-cell="${safe(p.id+'|'+at+'|'+a.id)}">${value===''?'—':safe(value)}</output>`:`<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="rt-score-input" data-shooter="${safe(p.id)}" data-attempt="${at}" data-area="${safe(a.id)}" aria-label="${safe(p.name+' '+a.name+' '+at)}" value="${safe(record[a.id]??'')}" placeholder="—" oninput="setAreaScore('${p.id}','${at}','${t.id}','${a.id}',this.value)">`};
  const renderRow=(p,at)=>{
   const retry=at==='refire',raw=tableStatus(p,at,t),status=retry?raw:effectiveTableStatus(p,t);
   const paper=scoreTotals(attemptRecord(p,at,t),t).qualifying;
@@ -27,7 +27,7 @@ function score(){
  <section class="rt-course-banner">
  <div class="rt-banner-top"><span class="rt-eyebrow">CATM · LIVE CLASS</span><span class="rt-live"><i></i> AUTO-SAVED</span></div>
  <div class="rt-banner-main"><div><h2>${safe(db.weapon)} <span>Qualification</span></h2><p>${safe(session.template?.name||db.course)} · ${safe(session.date)}</p></div><span class="rt-table-counter">TABLE ${scoreTableIndex+1} / ${tables.length}</span></div>
- <div class="rt-table-control"><button type="button" onclick="changeScoringTable(-1)" ${scoreTableIndex===0?'disabled':''}>‹</button><select aria-label="Firing table" onchange="scoreTableIndex=Number(this.value);render()">${tables.map((x,i)=>`<option value="${i}" ${i===scoreTableIndex?'selected':''}>${safe(x.name)}</option>`).join('')}</select><button type="button" onclick="changeScoringTable(1)" ${scoreTableIndex===tables.length-1?'disabled':''}>›</button></div>
+ <div class="rt-table-control"><button type="button" onclick="changeScoringTable(-1)" ${scoreTableIndex===0?'disabled':''}>‹</button><select aria-label="Firing table" onchange="selectScoringTable(this)">${tables.map((x,i)=>`<option value="${i}" ${i===scoreTableIndex?'selected':''}>${safe(x.name)}</option>`).join('')}</select><button type="button" onclick="changeScoringTable(1)" ${scoreTableIndex===tables.length-1?'disabled':''}>›</button></div>
  </section>
  <div class="rt-stats"><div><small>SHOOTERS</small><strong data-rt-shooters>${shooters.length}</strong></div><div><small>SCORED</small><strong data-rt-completed>${completed}</strong></div><div><small>QUALIFIED</small><strong class="rt-lime" data-rt-passing>${passing}</strong></div><div><small>UNQUALIFIED</small><strong class="rt-red" data-rt-failing>${failed}</strong></div></div>
  <section class="rt-table-shell">
