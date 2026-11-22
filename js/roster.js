@@ -74,7 +74,6 @@ function roster(){
   :(Number(a.lane)>0?Number(a.lane):Number.MAX_SAFE_INTEGER)-(Number(b.lane)>0?Number(b.lane):Number.MAX_SAFE_INTEGER)||a.name.localeCompare(b.name));
  const assigned=shooters.filter(p=>Number(p.lane)>0).length;
  const incomplete=shooters.filter(p=>!p.name?.trim()||!p.grade?.trim()||!p.organization?.trim()).length;
- const rifle=rifleForCard();
  return `<div class="rt-shooters-view">
   <section class="rt-shooters-card">
    <header class="rt-shooters-card-head">
@@ -99,11 +98,10 @@ function roster(){
      <summary>Class settings</summary>
      <div class="rt-class-settings-fields">
       <label>Class / qualification date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label>
-      <label>Authenticating Official<input value="${safe(s.authenticatingOfficial||'')}" onchange="updateSession('authenticatingOfficial',this.value)" placeholder="Name and grade"></label>
       <label>Default initial rounds<input type="number" min="0" value="${safe(s.defaultRounds||0)}" onchange="updateSession('defaultRounds',this.value)"></label>
      </div>
      <button type="button" onclick="applyRounds()">Apply rounds to all shooters</button>
-     <p class="muted">The qualification date and authenticating official are used on draft DAF 629 cards. ${rifle?'Rifle butt numbers can be edited in shooter details.':''}</p>
+     <p class="muted">Set the qualification date and default ammunition for this class.</p>
     </details>
    </div>
   </section>
@@ -213,15 +211,11 @@ function openScoreShooterModal(mode){
  const p=mode==='edit'?s.shooters.find(x=>x.id===s.selected):null;
  if(mode==='edit'&&!p){alert('Select a shooter from the score table first.');return}
  const root=document.getElementById('rt-modal-root');if(!root)return;
- const rifle=rifleForCard();
  root.innerHTML=`<div class="rt-modal-overlay" onclick="closeScoreShooterModal(event)"><section class="rt-modal" role="dialog" aria-modal="true" aria-labelledby="rt-dialog-title"><header><div><small>CLASS ROSTER</small><h3 id="rt-dialog-title">${p?'Edit Shooter':'Add Shooter'}</h3></div><button type="button" class="rt-modal-close" onclick="closeScoreShooterModal()">✕</button></header>
  <form id="rt-shooter-form" onsubmit="saveScoreShooterModal(event,'${p?p.id:''}')">
  <label>Full name<input name="name" required autocomplete="off" value="${safe(p?.name||'')}" placeholder="Smith, John"></label>
  <div class="rt-modal-grid"><label>Lane<input name="lane" type="number" min="1" value="${safe(p?.lane??'')}"></label><label>Initial Ammo<input name="initial" type="number" min="0" value="${safe(p?.initial??s.defaultRounds??0)}"></label></div>
  <div class="rt-modal-grid"><label>Grade<input name="grade" autocomplete="off" value="${safe(p?.grade||'')}"></label><label>Organization<input name="organization" autocomplete="off" value="${safe(p?.organization||'')}"></label></div>
- <label>DoD ID (optional)<input name="dodId" inputmode="numeric" autocomplete="off" value="${safe(p?.dodId||'')}"></label>
- <label>Weapon serial number (optional)<input name="weaponSerial" autocomplete="off" value="${safe(p?.weaponSerial||'')}"></label>
- ${rifle?`<label>Rifle Butt #<input name="buttNumber" value="${safe(p?.buttNumber||'')}"></label>`:''}
  <footer><button type="button" onclick="closeScoreShooterModal()">Cancel</button><button type="submit" class="primary">${p?'Save Changes':'Add Shooter'}</button></footer>
  </form></section></div>`;
  document.body.classList.add('rt-modal-open');
@@ -235,7 +229,7 @@ function saveScoreShooterModal(e,id){
  const name=String(data.get('name')||'').trim();if(!name)return;
  let p=s.shooters.find(x=>x.id===id);
  if(!p){p=makeShooter(name,'',n(s.defaultRounds));s.shooters.push(p)}
- for(const key of ['name','grade','organization','dodId','weaponSerial','buttNumber'])if(data.has(key))p[key]=String(data.get(key)||'').trim();
+ for(const key of ['name','grade','organization']if(data.has(key))p[key]=String(data.get(key)||'').trim();
  p.lane=data.get('lane')===''?'':n(data.get('lane'));p.initial=n(data.get('initial'));
  s.selected=p.id;save();closeScoreShooterModal();render();
 }
