@@ -216,6 +216,7 @@ function openScoreShooterModal(mode){
  <label>Full name<input name="name" required autocomplete="off" value="${safe(p?.name||'')}" placeholder="Smith, John"></label>
  <div class="rt-modal-grid"><label>Lane<input name="lane" type="number" min="1" value="${safe(p?.lane??'')}"></label><label>Initial Ammo<input name="initial" type="number" min="0" value="${safe(p?.initial??s.defaultRounds??0)}"></label></div>
  <div class="rt-modal-grid"><label>Grade/Rank (optional)<input name="grade" autocomplete="off" value="${safe(p?.grade||'')}"></label><label>Organization (optional)<input name="organization" autocomplete="off" value="${safe(p?.organization||'')}"></label></div>
+ <div class="rt-modal-grid"><label>Butt # (optional)<input name="buttNumber" autocomplete="off" value="${safe(p?.buttNumber||'')}" placeholder="Butt number"></label><label>Weapon Serial Number (optional)<input name="weaponSerial" autocomplete="off" value="${safe(p?.weaponSerial||'')}" placeholder="Serial number"></label></div>
  <footer><button type="button" onclick="closeScoreShooterModal()">Cancel</button><button type="submit" class="primary">${p?'Save Changes':'Add Shooter'}</button></footer>
  </form></section></div>`;
  document.body.classList.add('rt-modal-open');
@@ -229,7 +230,7 @@ function saveScoreShooterModal(e,id){
  const name=String(data.get('name')||'').trim();if(!name)return;
  let p=s.shooters.find(x=>x.id===id);
  if(!p){p=makeShooter(name,'',n(s.defaultRounds));s.shooters.push(p)}
- for(const key of ['name','grade','organization'])if(data.has(key))p[key]=String(data.get(key)||'').trim();
+ for(const key of ['name','grade','organization','buttNumber','weaponSerial'])if(data.has(key))p[key]=String(data.get(key)||'').trim();
  p.lane=data.get('lane')===''?'':n(data.get('lane'));p.initial=n(data.get('initial'));
  s.selected=p.id;save();closeScoreShooterModal();render();
 }
