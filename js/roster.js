@@ -65,7 +65,7 @@ function rtSelectRosterShooter(id){
  document.querySelectorAll('.rt-shooter-row').forEach(el=>{
   const active=el.dataset.shooterId===id;
   el.classList.toggle('selected',active);
-  el.setAttribute('aria-pressed',String(active));
+  const pick=el.querySelector('.rt-shooter-pick');if(pick)pick.setAttribute('aria-pressed',String(active));
  });
  const edit=document.getElementById('rt-roster-edit');if(edit)edit.disabled=false;
 }
