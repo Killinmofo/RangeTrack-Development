@@ -97,8 +97,8 @@ function roster(){
     <details class="rt-class-settings">
      <summary>Class settings</summary>
      <div class="rt-class-settings-fields">
-      <label>Class / qualification date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label>
-      <label>Default initial rounds<input type="number" min="0" value="${safe(s.defaultRounds||0)}" onchange="updateSession('defaultRounds',this.value)"></label>
+      <label>Class Date<input type="date" value="${safe(s.date)}" onchange="updateSession('date',this.value)"></label>
+      <label>Default Initial Rounds<input type="number" min="0" value="${safe(s.defaultRounds||0)}" onchange="updateSession('defaultRounds',this.value)"></label>
      </div>
      <button type="button" onclick="applyRounds()">Apply rounds to all shooters</button>
      <p class="muted">Set the qualification date and default ammunition for this class.</p>
@@ -215,7 +215,7 @@ function openScoreShooterModal(mode){
  <form id="rt-shooter-form" onsubmit="saveScoreShooterModal(event,'${p?p.id:''}')">
  <label>Full name<input name="name" required autocomplete="off" value="${safe(p?.name||'')}" placeholder="Smith, John"></label>
  <div class="rt-modal-grid"><label>Lane<input name="lane" type="number" min="1" value="${safe(p?.lane??'')}"></label><label>Initial Ammo<input name="initial" type="number" min="0" value="${safe(p?.initial??s.defaultRounds??0)}"></label></div>
- <div class="rt-modal-grid"><label>Grade<input name="grade" autocomplete="off" value="${safe(p?.grade||'')}"></label><label>Organization<input name="organization" autocomplete="off" value="${safe(p?.organization||'')}"></label></div>
+ <div class="rt-modal-grid"><label>Grade/Rank (optional)<input name="grade" autocomplete="off" value="${safe(p?.grade||'')}"></label><label>Organization (optional)<input name="organization" autocomplete="off" value="${safe(p?.organization||'')}"></label></div>
  <footer><button type="button" onclick="closeScoreShooterModal()">Cancel</button><button type="submit" class="primary">${p?'Save Changes':'Add Shooter'}</button></footer>
  </form></section></div>`;
  document.body.classList.add('rt-modal-open');
