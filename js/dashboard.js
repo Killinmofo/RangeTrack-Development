@@ -56,9 +56,26 @@ function activeCourses(){return `<section class="panel"><div class="row between"
 
 function manageWeapons(){
  const used=w=>Object.entries(db.sessions).filter(([k])=>k.startsWith(w+'|')).length;
- return `<section class="panel"><div class="row between"><h2>Manage Weapon Systems</h2><button onclick="home()">⌂ Home</button></div><p class="muted">Choose which weapons are available at this location. Removing a weapon hides it from selection and the Course Editor, but does not delete saved classes or course templates.</p>
- ${WEAPONS.map((w,i)=>`<div class="entry row between"><div><strong>${safe(w)}</strong><div class="muted">${db.courses.filter(c=>c.weapons.includes(w)).length} assigned course templates • ${used(w)} saved classes</div></div><button class="danger" onclick="removeWeapon(${i})">Remove</button></div>`).join('')||'<p class="muted">No weapon systems configured.</p>'}
- <h3 style="margin-top:18px">Add Weapon System</h3><div class="row"><label style="flex:1">Weapon name<input id="newWeaponName" maxlength="70" placeholder="e.g., M249"></label><button class="primary" onclick="addWeapon()">+ Add</button></div><p class="muted">After adding a weapon, open Course Editor and assign existing or new course templates to it.</p></section>`;
+ return `<div class="rt-config-view rt-weapons-view">
+  <section class="rt-config-hero">
+   <div class="rt-config-hero-top"><span class="rt-eyebrow">RANGETRACK · COURSE MANAGEMENT</span><span class="rt-config-tag">WEAPONS</span></div>
+   <h2>Weapon <span>Systems</span></h2>
+   <p>Manage the weapons available for qualification courses at this location.</p>
+   <div class="rt-config-hero-foot"><span>${WEAPONS.length} AVAILABLE ${WEAPONS.length===1?'SYSTEM':'SYSTEMS'}</span><strong>LOCAL CONFIGURATION</strong></div>
+  </section>
+  <section class="rt-config-shell">
+   <header class="rt-config-heading"><div><span class="rt-eyebrow">SYSTEM INVENTORY</span><h3>Available Weapon Systems</h3></div></header>
+   <div class="rt-config-list">
+    ${WEAPONS.map((w,i)=>`<div class="rt-config-row rt-weapon-row"><div class="rt-config-weapon-icon" aria-hidden="true">◎</div><div class="rt-config-row-main"><strong>${safe(w)}</strong><small>${db.courses.filter(c=>c.weapons.includes(w)).length} assigned ${db.courses.filter(c=>c.weapons.includes(w)).length===1?'template':'templates'} · ${used(w)} active ${used(w)===1?'class':'classes'}</small></div><button type="button" class="rt-config-danger" onclick="removeWeapon(${i})">Remove</button></div>`).join('')||'<p class="rt-config-empty">No weapon systems configured.</p>'}
+   </div>
+   <div class="rt-config-note">Removing a weapon hides it from selection and the Course Editor. Saved classes and course templates are preserved.</div>
+  </section>
+  <section class="rt-config-shell">
+   <header class="rt-config-heading"><div><span class="rt-eyebrow">ADD A SYSTEM</span><h3>Add Weapon System</h3></div></header>
+   <div class="rt-config-content"><label>Weapon Name<input id="newWeaponName" maxlength="70" placeholder="e.g., M249"></label><button type="button" class="rt-config-primary rt-config-add-weapon" onclick="addWeapon()">+ Add Weapon System</button><p>Once added, assign the weapon to courses in the Course Editor.</p></div>
+  </section>
+  <button type="button" class="rt-config-back" onclick="home()">‹ Back to Dashboard</button>
+ </div>`;
 }
 function addWeapon(){
  const el=document.getElementById('newWeaponName');const name=el?.value.trim().replace(/\s+/g,' ');
