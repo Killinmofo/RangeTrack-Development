@@ -1,5 +1,46 @@
 'use strict';
 let rtRosterQuery='';
+let rtRosterCopySelected=new Set();
+let rtRosterCopyKey='';
+let rtRosterCopyPending=[];
+function rtRosterCopySync(){
+ const key=sessionKey(),s=current();
+ if(key!==rtRosterCopyKey){rtRosterCopySelected.clear();rtRosterCopyKey=key;}
+ if(s)for(const id of rtRosterCopySelected)if(!s.shooters.some(p=>p.id===id))rtRosterCopySelected.delete(id);
+}
+function rtRosterToggleCopy(id,checked){
+ rtRosterCopySync();
+ if(checked)rtRosterCopySelected.add(id);else rtRosterCopySelected.delete(id);
+ const row=[...document.querySelectorAll('.rt-shooter-row')].find(el=>el.dataset.shooterId===id);
+ if(row)row.classList.toggle('rt-copy-checked',checked);
+ rtRosterCopyUpdate();
+}
+function rtRosterSelectAll(checked){
+ rtRosterCopySync();
+ // Select only visible shooters when a roster search is active.
+ document.querySelectorAll('.rt-shooter-row:not([hidden])').forEach(row=>{
+  const id=row.dataset.shooterId;
+  if(checked)rtRosterCopySelected.add(id);else rtRosterCopySelected.delete(id);
+  row.classList.toggle('rt-copy-checked',checked);
+  const box=row.querySelector('.rt-roster-checkbox');if(box)box.checked=checked;
+ });
+ rtRosterCopyUpdate();
+}
+function rtRosterCopyUpdate(){
+ rtRosterCopySync();
+ const count=rtRosterCopySelected.size;
+ const label=document.getElementById('rt-roster-selected-count');
+ if(label)label.textContent=count+' selected';
+ const copy=document.getElementById('rt-roster-copy-selected');
+ if(copy)copy.disabled=count===0;
+ const menu=document.getElementById('rt-menu-copy');
+ if(menu)menu.textContent=count?'Copy '+count+' Selected to Class':'Copy Shooter to Class';
+ const visible=[...document.querySelectorAll('.rt-shooter-row:not([hidden])')];
+ const all=visible.length>0&&visible.every(row=>rtRosterCopySelected.has(row.dataset.shooterId));
+ const selectAll=document.getElementById('rt-roster-select-all');
+ if(selectAll){selectAll.checked=all;selectAll.indeterminate=!all&&visible.some(row=>rtRosterCopySelected.has(row.dataset.shooterId));}
+}
+
 function rtRosterIcon(type){
  const shapes={
  users:'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20v-2a6 6 0 0 1 12 0v2H2zM15 15a5 5 0 0 1 7 5h-6"/>',
@@ -38,18 +79,19 @@ function rtFilterRoster(value){
  });
  const status=document.getElementById('rt-roster-search-status');
  if(status)status.textContent=needle?(shown+' matching '+(shown===1?'shooter':'shooters')):'';
+ rtRosterCopyUpdate();
 }
 function rtClearRoster(){
  const s=current();if(!s||!s.shooters.length)return;
  if(!window.confirm('Clear all '+s.shooters.length+' shooters from this class? This permanently removes their saved scores and personnel details from this class.'))return;
- s.shooters=[];s.selected='';save();rtRosterQuery='';render();
+ s.shooters=[];s.selected='';rtRosterCopySelected.clear();save();rtRosterQuery='';render();
 }
 function rtRosterRemove(){
  const s=current(),p=s?.shooters.find(shooter=>shooter.id===s.selected);
  if(!p){window.alert('Select the shooter you want to remove from the roster first.');return;}
  if(!window.confirm('Remove '+p.name+' from this class? Their saved scores and personnel details for this class will also be deleted.'))return;
  s.shooters=s.shooters.filter(shooter=>shooter.id!==p.id);
- s.selected='';
+ s.selected='';rtRosterCopySelected.delete(p.id);
  save();
  render();
 }
@@ -61,20 +103,26 @@ function rtRosterEdit(){
  }
  openScoreShooterModal('edit');
 }
-function rtRosterCopy(){
- const source=current(),p=source?.shooters.find(item=>item.id===source.selected);
- if(!p){window.alert('Select a shooter to copy first.');return;}
- const destinations=Object.entries(db.sessions).filter(([key,session])=>key!==sessionKey()&&session?.template?.phases?.length);
- if(!destinations.length){window.alert('There are no other active classes to copy this shooter into. Start another class first.');return;}
+function rtRosterCopy(onlySelected=false){
+ rtRosterCopySync();
+ const source=current();
+ const people=rtRosterCopySelected.size
+  ?source.shooters.filter(p=>rtRosterCopySelected.has(p.id))
+  :onlySelected?[]:source.shooters.filter(p=>p.id===source.selected);
+ if(!people.length){window.alert(onlySelected?'Check the shooters you want to copy first.':'Select a shooter or check one or more boxes first.');return;}
+ const destinations=Object.entries(db.sessions).filter(([key,s])=>key!==sessionKey()&&s?.template?.phases?.length);
+ if(!destinations.length){window.alert('There are no other active classes to copy into. Start another class first.');return;}
  const menu=document.getElementById('rt-roster-menu');if(menu)menu.hidden=true;
  const root=document.getElementById('rt-modal-root');if(!root)return;
+ rtRosterCopyPending=people.map(p=>p.id);
  root.innerHTML=`<div class="rt-modal-overlay" onclick="rtCloseCopyShooter(event)"><section class="rt-modal rt-copy-modal" role="dialog" aria-modal="true" aria-labelledby="rt-copy-title">
-  <header><div><small>CLASS ROSTER</small><h3 id="rt-copy-title">Copy Shooter to Class</h3></div><button type="button" class="rt-modal-close" onclick="rtCloseCopyShooter()">✕</button></header>
+  <header><div><small>CLASS ROSTER</small><h3 id="rt-copy-title">Copy ${people.length===1?'Shooter':'Shooters'} to Class</h3></div><button type="button" class="rt-modal-close" onclick="rtCloseCopyShooter()">✕</button></header>
   <form onsubmit="rtSaveCopyShooter(event)">
-   <p class="rt-copy-person">Shooter: <strong>${safe(p.name)}</strong></p>
+   <p class="rt-copy-person"><strong>${people.length} ${people.length===1?'shooter':'shooters'} selected</strong></p>
+   <div class="rt-copy-names">${people.map(p=>`<span>${safe(p.name)}</span>`).join('')}</div>
    <label>Destination Active Class<select name="target" required>${destinations.map(([key,s],i)=>`<option value="${i}">${safe(s.template?.name||'Saved Class')} (${safe(key.split('|')[0])})${s.date?' · '+safe(s.date):''}</option>`).join('')}</select></label>
-   <p class="rt-copy-note">Copies the shooter's name, grade/rank, and organization. Lane, butt number, weapon SN, ammunition, scores, and remedials stay specific to each class. The destination uses its default initial rounds.</p>
-   <footer><button type="button" onclick="rtCloseCopyShooter()">Cancel</button><button type="submit" class="primary">Copy Shooter</button></footer>
+   <p class="rt-copy-note">Only name, grade/rank, and organization are copied. Lane, butt number, weapon SN, scores, and remedials stay with the original class. New shooters use the destination class's default initial rounds. Existing names in the destination will be skipped.</p>
+   <footer><button type="button" onclick="rtCloseCopyShooter()">Cancel</button><button type="submit" class="primary">Copy ${people.length===1?'Shooter':'Shooters'}</button></footer>
   </form></section></div>`;
  document.body.classList.add('rt-modal-open');
  root.querySelector('select[name="target"]')?.focus();
@@ -82,26 +130,32 @@ function rtRosterCopy(){
 function rtCloseCopyShooter(event){
  if(event&&event.target!==event.currentTarget)return;
  const root=document.getElementById('rt-modal-root');if(root)root.innerHTML='';
+ rtRosterCopyPending=[];
  document.body.classList.remove('rt-modal-open');
 }
 function rtSaveCopyShooter(event){
  event.preventDefault();
- const source=current(),p=source?.shooters.find(item=>item.id===source.selected);
- if(!p){window.alert('The selected shooter is no longer available.');rtCloseCopyShooter();return;}
- const destinations=Object.entries(db.sessions).filter(([key,session])=>key!==sessionKey()&&session?.template?.phases?.length);
+ const source=current();
+ const people=rtRosterCopyPending.map(id=>source?.shooters.find(item=>item.id===id)).filter(Boolean);
+ if(!people.length){window.alert('The selected shooters are no longer available.');rtCloseCopyShooter();return;}
+ const destinations=Object.entries(db.sessions).filter(([key,s])=>key!==sessionKey()&&s?.template?.phases?.length);
  const selected=Number(new FormData(event.currentTarget).get('target'));
  if(!Number.isInteger(selected)||selected<0||selected>=destinations.length){window.alert('Choose a valid active class.');return;}
  const [key,target]=destinations[selected];
- if(target.shooters.some(item=>String(item.name||'').trim().toLocaleLowerCase()===String(p.name).trim().toLocaleLowerCase())){
-  window.alert('A shooter with this name already exists in the destination class. No duplicate was created.');
-  return;
+ const names=new Set(target.shooters.map(p=>String(p.name||'').trim().toLocaleLowerCase()));
+ let added=0,skipped=0;
+ for(const p of people){
+  const normalized=String(p.name||'').trim().toLocaleLowerCase();
+  if(names.has(normalized)){skipped++;continue;}
+  const copied=makeShooter(p.name,'',n(target.defaultRounds??target.template?.defaultRounds??0));
+  copied.grade=p.grade||'';
+  copied.organization=p.organization||'';
+  target.shooters.push(copied);names.add(normalized);added++;
  }
- const copied=makeShooter(p.name,'',n(target.defaultRounds??target.template?.defaultRounds??0));
- copied.grade=p.grade||'';
- copied.organization=p.organization||'';
- target.shooters.push(copied);
- save();rtCloseCopyShooter();
- window.alert(p.name+' copied to '+(target.template?.name||'the selected class')+' ('+key.split('|')[0]+'). Open that class from the Dashboard to assign a lane and weapon details.');
+ if(added)save();
+ rtCloseCopyShooter();
+ rtRosterCopySelected.clear();
+ window.alert(added+' '+(added===1?'shooter':'shooters')+' copied to '+(target.template?.name||'the selected class')+' ('+key.split('|')[0]+').'+(skipped?' '+skipped+' already present and skipped.':'')+' Open that class from the Dashboard to assign lanes and weapon details.');
  render();
 }
 function rtRosterMoreToggle(){
@@ -112,6 +166,7 @@ function roster(){
  const s=current();
  if(!s)return '<section class="panel">No active class.</section>';
  const shooters=s.shooters||[];
+ rtRosterCopySync();
  const ordered=[...shooters].sort((a,b)=>s.rosterSort==='name'
   ?a.name.localeCompare(b.name)
   :(Number(a.lane)>0?Number(a.lane):Number.MAX_SAFE_INTEGER)-(Number(b.lane)>0?Number(b.lane):Number.MAX_SAFE_INTEGER)||a.name.localeCompare(b.name));
@@ -130,11 +185,17 @@ function roster(){
      <div class="rt-stat-incomplete"><strong>${incomplete}</strong><span title="Missing personnel information">Missing Prsnl Info</span></div>
     </div>
     <label class="rt-roster-search">${rtRosterIcon('search')}<span class="sr-only">Search shooters</span><input type="search" placeholder="Search shooters..." aria-label="Search shooters" autocomplete="off" oninput="rtFilterRoster(this.value)" value="${safe(rtRosterQuery)}"></label>
+    <div class="rt-roster-bulkbar">
+     <label class="rt-roster-all-label"><input id="rt-roster-select-all" type="checkbox" aria-label="Select all visible shooters" onchange="rtRosterSelectAll(this.checked)" ${shooters.length&&shooters.every(p=>rtRosterCopySelected.has(p.id))?'checked':''}><span>Select All</span></label>
+     <span id="rt-roster-selected-count" aria-live="polite">${rtRosterCopySelected.size} selected</span>
+     <button type="button" id="rt-roster-copy-selected" onclick="rtRosterCopy(true)" ${rtRosterCopySelected.size?'':'disabled'}>Copy Selected</button>
+    </div>
     <div class="rt-roster-table" role="group" aria-label="Class shooter roster">
-     <div class="rt-roster-columns"><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span></div>
-     ${ordered.map((p,i)=>`<button type="button" class="rt-shooter-row ${s.selected===p.id?'selected':''}" data-shooter-id="${safe(p.id)}" data-search="${safe((p.name+' '+p.grade+' '+p.organization+' '+p.lane).toLocaleLowerCase())}" aria-pressed="${s.selected===p.id?'true':'false'}" onclick="rtSelectRosterShooter('${p.id}')">
-       <span class="rt-roster-number">${i+1}</span><strong class="rt-shooter-name">${safe(shortScoreName(p.name))}</strong><span class="rt-lane-value">${p.lane?'<b>'+safe(p.lane)+'</b>':'—'}</span><span class="rt-ammo-value">${safe(Number(p.initial)||0)}</span>
-      </button>`).join('')||'<p class="rt-roster-empty">No shooters added yet. Tap Add Shooter below to get started.</p>'}
+     <div class="rt-roster-columns"><span class="rt-roster-check-space"></span><span>#</span><span>Shooter</span><span>Lane</span><span>Ammo</span></div>
+     ${ordered.map((p,i)=>`<div class="rt-shooter-row ${s.selected===p.id?'selected':''} ${rtRosterCopySelected.has(p.id)?'rt-copy-checked':''}" data-shooter-id="${safe(p.id)}" data-search="${safe((p.name+' '+p.grade+' '+p.organization+' '+p.lane).toLocaleLowerCase())}">
+       <input type="checkbox" class="rt-roster-checkbox" aria-label="Select ${safe(p.name)} to copy" ${rtRosterCopySelected.has(p.id)?'checked':''} onchange="rtRosterToggleCopy('${p.id}',this.checked)">
+       <button type="button" class="rt-shooter-pick" aria-pressed="${s.selected===p.id?'true':'false'}" onclick="rtSelectRosterShooter('${p.id}')"><span class="rt-roster-number">${i+1}</span><strong class="rt-shooter-name">${safe(shortScoreName(p.name))}</strong><span class="rt-lane-value">${p.lane?'<b>'+safe(p.lane)+'</b>':'—'}</span><span class="rt-ammo-value">${safe(Number(p.initial)||0)}</span></button>
+      </div>`).join('')||'<p class="rt-roster-empty">No shooters added yet. Tap Add Shooter below to get started.</p>'}
     </div>
     <p id="rt-roster-search-status" class="rt-search-status" aria-live="polite"></p>
     <details class="rt-class-settings">
@@ -154,7 +215,7 @@ function roster(){
   <strong>Roster options</strong>
   <button type="button" onclick="rtRosterSort('lane')">Sort by lane ${s.rosterSort!=='name'?'✓':''}</button>
   <button type="button" onclick="rtRosterSort('name')">Sort by name ${s.rosterSort==='name'?'✓':''}</button>
-  <button type="button" onclick="rtRosterCopy()" ${shooters.length?'':'disabled'}>Copy Shooter to Class</button>
+  <button type="button" id="rt-menu-copy" onclick="rtRosterCopy()" ${shooters.length?'':'disabled'}>${rtRosterCopySelected.size?'Copy '+rtRosterCopySelected.size+' Selected to Class':'Copy Shooter to Class'}</button>
   <button type="button" class="rt-clear-roster" onclick="rtRosterRemove()" ${shooters.length?'':'disabled'}>Remove Shooter</button>
   <button type="button" class="rt-clear-roster" onclick="rtClearRoster()" ${shooters.length?'':'disabled'}>Clear Roster</button>
  </div>
