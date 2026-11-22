@@ -11,7 +11,7 @@ function score(){
  const pending=remedialPendingForTable(t).length;
  const cols=`minmax(82px,1.35fr) repeat(${t.areas.length},minmax(38px,1fr)) 45px 37px`;
  const label=a=>{const v=String(a||'Score');return /head/i.test(v)?'Head':/body/i.test(v)?'Body':/exterior|outer/i.test(v)?'Outer':/vital/i.test(v)?'Vital':/paper/i.test(v)?'Paper':/total/i.test(v)?'Total':v.length>7?v.slice(0,6)+'…':v};
- const input=(p,at,a)=>{const record=attemptRecord(p,at,t),value=areaValue(record,t,a);return a.mode==='sum'?`<output class="rt-score-calc" data-cell="${safe(p.id+'|'+at+'|'+a.id)}">${value===''?'—':safe(value)}</output>`:`<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="rt-score-input" data-shooter="${safe(p.id)}" data-attempt="${at}" data-area="${safe(a.id)}" aria-label="${safe(p.name+' '+a.name+' '+at)}" value="${safe(record[a.id]??'')}" placeholder="—" oninput="setAreaScore('${p.id}','${at}','${t.id}','${a.id}',this.value)">`};
+ const input=(p,at,a)=>{const record=attemptRecord(p,at,t),value=areaValue(record,t,a);return a.mode==='sum'?`<output class="rt-score-calc" data-cell="${safe(p.id+'|'+at+'|'+a.id)}">${value===''?'—':safe(value)}</output>`:`<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="rt-score-input" data-shooter="${safe(p.id)}" data-attempt="${at}" data-area="${safe(a.id)}" aria-label="${safe(p.name+' '+a.name+' '+at)}" value="${safe(record[a.id]??'')}" placeholder="—" oninput="setAreaScore('${p.id}','${at}','${t.id}','${a.id}',this.value,this)">`};
  const renderRow=(p,at)=>{
   const retry=at==='refire',raw=tableStatus(p,at,t),status=retry?raw:effectiveTableStatus(p,t);
   const paper=scoreTotals(attemptRecord(p,at,t),t).qualifying;
@@ -32,6 +32,7 @@ function score(){
  <div class="rt-stats"><div><small>SHOOTERS</small><strong data-rt-shooters>${shooters.length}</strong></div><div><small>SCORED</small><strong data-rt-completed>${completed}</strong></div><div><small>QUALIFIED</small><strong class="rt-lime" data-rt-passing>${passing}</strong></div><div><small>UNQUALIFIED</small><strong class="rt-red" data-rt-failing>${failed}</strong></div></div>
  <section class="rt-table-shell">
  <div class="rt-table-heading"><div><span class="rt-eyebrow">SCORING MATRIX</span><h3>${safe(t.name)}</h3></div><small>${t.rounds===''?'':safe(t.rounds)+' RDS'} · ${shooters.length} SHOOTERS</small></div>
+ <div id="rt-score-warning" class="rt-score-warning" role="alert" aria-live="assertive" hidden></div>
  <div class="rt-score-grid" style="--rt-cols:${cols}">
  <div class="rt-score-columns"><span>SHOOTER</span>${t.areas.map(a=>`<span title="${safe(a.name)}">${safe(label(a.name))}</span>`).join('')}<span>HITS</span><span>QUAL</span></div>
  ${shooters.map(p=>renderRow(p,'initial')+(refireEligible(p,t)?renderRow(p,'refire'):'' )).join('')||'<div class="rt-empty-state">No shooters added yet. Use Add below to start scoring.</div>'}
