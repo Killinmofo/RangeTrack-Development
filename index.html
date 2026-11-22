@@ -436,7 +436,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 </style>
 </head><body><header class="brand-header"><div class="brand-inner"><div class="brand-text"><h1>RANGE<span>TRACK</span></h1><div class="brand-sub">CATM QUALIFICATION SYSTEM</div></div></div></header><main><div id="nav" class="tabs"></div><div id="app"></div><div class="footer">RangeTrack • Data stored locally on this device. Verify course standards and refire policy before operational use.</div></main><script>
 'use strict';
-const KEY='catm-scoring-v3', PREV='catm-scoring-v2'; // V4 uses existing V3 storage
+const KEY='rangetrack-development-v1', PREV='rangetrack-development-legacy-v1'; // Development has separate storage from stable Range-Scores
 const CATALOG={'M18':['AFQC','DQC','BAT','Sustainment'],'Glock 19':['BAT'],'Glock 26':['BAT'],'M4A1':['Zero Fire','AFQC','DQC','Sustainment'],'M4':['Zero Fire','AFQC','DQC','Sustainment'],'M110A1':['Annual','Recurring','Sustainment']};
 const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const DEFAULT_WEAPONS=['M18','Glock 19','Glock 26','M4A1','M4','M110A1'];
@@ -535,16 +535,17 @@ function tableStatus(p,attempt,t){
 }
 // Only explicitly initiated remedial attempts appear. Existing recorded refires remain visible
 // for backwards compatibility with earlier RangeTrack versions.
-function hasLegacyRefire(p){return p.remedialInitiated===undefined && Object.values(p.refireScores||{}).some(rec=>Object.values(rec||{}).some(v=>v!==''&&v!==null&&v!==undefined))}
-function remedialActive(p){return p.remedialInitiated===true||hasLegacyRefire(p)}
-function refireEligible(p,t){return remedialActive(p)&&tableStatus(p,'initial',t)==='Fail'}
-function initiateRemedial(){
- const p=shooter();if(!p)return;
- const failed=tableList().filter(t=>tableStatus(p,'initial',t)==='Fail');
- if(!failed.length){alert('No failed Firing Tables are available for remedial scoring. Complete and review the initial scores first.');return}
- p.remedialInitiated=true;
+function hasLegacyRefire(p){return p.remedialInitiated===undefined&&Object.values(p.refireScores||{}).some(rec=>Object.values(rec||{}).some(v=>v!==''&&v!==null&&v!==undefined))}
+function remedialActive(p){return p.remedialInitiated===true||hasLegacyRefire(p)||Object.values(p.remedialTables||{}).some(Boolean)}
+function refireEligible(p,t){return (p.remedialTables?.[t.id]===true||(!p.remedialTables&&p.remedialInitiated===true)||hasLegacyRefire(p))&&tableStatus(p,'initial',t)==='Fail'}
+function remedialPendingForTable(t){return (current()?.shooters||[]).filter(p=>tableStatus(p,'initial',t)==='Fail'&&!refireEligible(p,t))}
+function initiateTableRemedials(){
+ const t=tableList()[scoreTableIndex];if(!t)return;
+ const pending=remedialPendingForTable(t);if(!pending.length)return;
+ for(const p of pending){if(!p.remedialTables)p.remedialTables={};p.remedialTables[t.id]=true}
  save();render();
 }
+function initiateRemedial(){initiateTableRemedials()}
 function effectiveTableStatus(p,t){
  const initial=tableStatus(p,'initial',t);
  if(!refireEligible(p,t))return initial;
@@ -573,7 +574,7 @@ function overallSummary(p){
 function setAreaScore(id,attempt,tableId,areaId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const dest=attempt==='initial'?p.initialScores:p.refireScores;if(!dest[tableId])dest[tableId]={};dest[tableId][areaId]=value===''?'':n(value);save();if(db.view==='score')refreshScoringTable();else refreshLive()}
 function setTimeResult(id,attempt,tableId,value){const p=current().shooters.find(x=>x.id===id);if(!p)return;const key=attempt==='initial'?'initialTimes':'refireTimes';if(!p[key])p[key]={};p[key][tableId]=value;save();refreshLive()}
 
-const makeShooter=(name,lane,rounds,buttNumber="")=>({buttNumber,grade:'',dodId:'',organization:'',weaponSerial:'',id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false});
+const makeShooter=(name,lane,rounds,buttNumber="")=>({buttNumber,grade:'',dodId:'',organization:'',weaponSerial:'',id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,lane,initial:rounds,extra:0,initialScores:{},refireScores:{},initialTimes:{},refireTimes:{},refire:false,remedialInitiated:false,remedialTables:{}});
 const makeSession=()=>({date:new Date().toLocaleDateString('en-CA'),authenticatingOfficial:'',defaultRounds:0,selected:'',shooters:[],view:'roster'});
 const isCustom=c=>c==='Sustainment';
 function phaseNames(){return current()?.template?.phases?.map(p=>p.id)||phases().map(p=>p.id)};
@@ -794,19 +795,7 @@ function changeScoringTable(delta){
   render();
   document.getElementById('app')?.scrollIntoView({block:'start'});
 }
-function initiateRemedialRow(id){
-  const p=current()?.shooters.find(x=>x.id===id);
-  if(!p)return;
-  if(tableList().some(t=>tableStatus(p,'initial',t)==='Incomplete')){
-    alert('Enter all initial Firing Table scores for this shooter before initiating remedial.');
-    return;
-  }
-  const failed=tableList().filter(t=>tableStatus(p,'initial',t)==='Fail');
-  if(!failed.length){alert('No failed Firing Tables require remedial scoring.');return;}
-  p.remedialInitiated=true;
-  save();
-  render();
-}
+function initiateRemedialRow(id){const t=tableList()[scoreTableIndex],p=current()?.shooters.find(x=>x.id===id);if(!t||!p||tableStatus(p,'initial',t)!=='Fail')return;if(!p.remedialTables)p.remedialTables={};p.remedialTables[t.id]=true;save();render()}
 function refreshScoringTable(){
   const t=tableList()[scoreTableIndex];
   if(!t||db.view!=='score')return;
